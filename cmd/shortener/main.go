@@ -4,7 +4,6 @@ import (
 	"github.com/AnnV0lokitina/short-url-service.git/internal/app"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/usecase"
-	//"github.com/AnnV0lokitina/short-url-service/internal/app"
 )
 
 func main() {

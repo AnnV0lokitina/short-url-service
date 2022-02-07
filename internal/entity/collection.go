@@ -7,13 +7,13 @@ import (
 	"log"
 )
 
-type UrlCollection struct {
-	list map[string]*Url
+type URLCollection struct {
+	list map[string]*URL
 }
 
-func NewUrlCollection() *UrlCollection {
-	list := make(map[string]*Url)
-	return &UrlCollection{
+func NewURLCollection() *URLCollection {
+	list := make(map[string]*URL)
+	return &URLCollection{
 		list: list,
 	}
 }
@@ -29,18 +29,18 @@ func createUUID() string {
 	return uuid
 }
 
-func (c *UrlCollection) Add(fullUrl string) (string, *Url) {
-	url := NewUrl(fullUrl)
+func (c *URLCollection) Add(fullURL string) (string, *URL) {
+	url := NewURL(fullURL)
 	uuid := createUUID()
 	c.list[uuid] = url
 
 	return uuid, url
 }
 
-func (c *UrlCollection) Get(uuid string) (*Url, error) {
+func (c *URLCollection) Get(uuid string) (*URL, error) {
 	url, ok := c.list[uuid]
 	if !ok {
-		return nil, errors.New("No url saved")
+		return nil, errors.New("no url saved")
 	}
 
 	return url, nil

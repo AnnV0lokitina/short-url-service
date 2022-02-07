@@ -7,24 +7,24 @@ import (
 )
 
 type Repo struct {
-	info *entity.UrlCollection
+	info *entity.URLCollection
 	mu   sync.Mutex
 }
 
 func NewRepo() *Repo {
-	collection := entity.NewUrlCollection()
+	collection := entity.NewURLCollection()
 	return &Repo{
 		info: collection,
 	}
 }
 
-func (r *Repo) GetInfo() *entity.UrlCollection {
+func (r *Repo) GetInfo() *entity.URLCollection {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	return r.info
 }
 
-func (r *Repo) SetInfo(info *entity.UrlCollection) {
+func (r *Repo) SetInfo(info *entity.URLCollection) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.info = info

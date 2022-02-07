@@ -1,6 +1,6 @@
 package usecase
 
-func (u *Usecase) GetUrl(uuid string) (string, string, error) {
+func (u *Usecase) GetURL(uuid string) (string, string, error) {
 	collection := u.repo.GetInfo()
 	url, err := collection.Get(uuid)
 	if err != nil {

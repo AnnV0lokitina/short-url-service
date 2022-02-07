@@ -1,6 +1,6 @@
 package usecase
 
-func (u *Usecase) SetUrl(full string) (string, string) {
+func (u *Usecase) SetURL(full string) (string, string) {
 	collection := u.repo.GetInfo()
 	uuid, url := collection.Add(full)
 	u.repo.SetInfo(collection)

@@ -1,13 +1,13 @@
 package entity
 
-type Url struct {
+type URL struct {
 	Short string
 	Full  string
 }
 
-func NewUrl(full string) *Url {
+func NewURL(full string) *URL {
 	short := createShort(full)
-	return &Url{
+	return &URL{
 		Short: short,
 		Full:  full,
 	}

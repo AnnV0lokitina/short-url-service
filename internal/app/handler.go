@@ -30,15 +30,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		uuid, shortUrl := h.usecase.SetUrl(url)
+		uuid, shortURL := h.usecase.SetURL(url)
 
-		showInfo := fmt.Sprintf("%s: %s", uuid, shortUrl)
+		showInfo := fmt.Sprintf("%s: %s", uuid, shortURL)
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(showInfo))
 	case http.MethodGet:
 		path := r.URL.Path
 		id := path[1:]
-		full, short, err := h.usecase.GetUrl(id)
+		full, short, err := h.usecase.GetURL(id)
 		if err != nil {
 			http.Error(w, "Invalid request", 400)
 		}

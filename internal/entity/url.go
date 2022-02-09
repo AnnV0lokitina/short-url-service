@@ -7,19 +7,31 @@ import (
 )
 
 type URL struct {
-	Short string
-	Full  string
+	uuid string
+	full string
 }
 
-func NewURL(fullURL string, shortURL string) *URL {
+func NewURL(fullURL string, uuid string) *URL {
 	return &URL{
-		Short: shortURL,
-		Full:  fullURL,
+		uuid: uuid,
+		full: fullURL,
 	}
 }
 
-func (u *URL) CreateShortURL() {
-	u.Short = createUUID(u.Full)
+func (u *URL) CreateUUID() {
+	u.uuid = createUUID(u.full)
+}
+
+func (u *URL) GetFullURL() string {
+	return u.full
+}
+
+func (u *URL) GetShortURL() string {
+	return "http://localhost:8080/" + u.uuid
+}
+
+func (u *URL) GetUUID() string {
+	return u.uuid
 }
 
 func createUUID(url string) string {

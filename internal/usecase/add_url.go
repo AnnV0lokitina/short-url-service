@@ -6,7 +6,7 @@ import (
 
 func (u *Usecase) SetURL(fullURL string) *entity.URL {
 	url := entity.NewURL(fullURL, "")
-	url.CreateShortURL()
+	url.CreateUUID()
 	u.repo.SetURL(url)
 
 	return url

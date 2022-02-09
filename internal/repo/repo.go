@@ -22,17 +22,17 @@ func NewRepo() *Repo {
 func (r *Repo) SetURL(url *entity.URL) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.list[url.Short] = url.Full
+	r.list[url.GetUUID()] = url.GetFullURL()
 }
 
-func (r *Repo) GetURL(shortURL string) (*entity.URL, error) {
+func (r *Repo) GetURL(uuid string) (*entity.URL, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	fullURL, ok := r.list[shortURL]
+	fullURL, ok := r.list[uuid]
 	if !ok {
 		return nil, errors.New("no url saved")
 	}
-	url := entity.NewURL(fullURL, shortURL)
+	url := entity.NewURL(fullURL, uuid)
 	return url, nil
 }

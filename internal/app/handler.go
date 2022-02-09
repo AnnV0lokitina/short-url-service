@@ -35,7 +35,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		urlInfo := h.usecase.SetURL(string(url))
 
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(urlInfo.Short))
+		w.Write([]byte(urlInfo.GetShortURL()))
 	case http.MethodGet:
 		path := r.URL.Path
 		id := path[1:]
@@ -44,9 +44,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Invalid request 4", 400)
 			return
 		}
-		w.Header().Set("Location", urlInfo.Full)
+		w.Header().Set("Location", urlInfo.GetFullURL())
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		// w.Write([]byte(urlInfo.Short))
 	default:
 		http.Error(w, "Invalid request 5", 400)
 	}

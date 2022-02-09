@@ -1,31 +1,38 @@
 package repo
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 )
 
 type Repo struct {
-	info *entity.URLCollection
+	list map[string]string
 	mu   sync.Mutex
 }
 
 func NewRepo() *Repo {
-	collection := entity.NewURLCollection()
+	list := make(map[string]string)
 	return &Repo{
-		info: collection,
+		list: list,
 	}
 }
 
-func (r *Repo) GetInfo() *entity.URLCollection {
+func (r *Repo) SetURL(url *entity.URL) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	return r.info
+	r.list[url.Short] = url.Full
 }
 
-func (r *Repo) SetInfo(info *entity.URLCollection) {
+func (r *Repo) GetURL(shortURL string) (*entity.URL, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	r.info = info
+
+	fullURL, ok := r.list[shortURL]
+	if !ok {
+		return nil, errors.New("no url saved")
+	}
+	url := entity.NewURL(fullURL, shortURL)
+	return url, nil
 }

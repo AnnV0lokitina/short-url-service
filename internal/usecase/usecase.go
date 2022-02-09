@@ -5,13 +5,13 @@ import (
 )
 
 type Repo interface {
-	GetInfo() *entity.URLCollection
-	SetInfo(info *entity.URLCollection)
+	SetURL(url *entity.URL)
+	GetURL(shortURL string) (*entity.URL, error)
 }
 
 type UsecaseInterface interface {
-	SetURL(full string) (string, string)
-	GetURL(uuid string) (string, string, error)
+	SetURL(full string) (*entity.URL, error)
+	GetURL(uuid string) (*entity.URL, error)
 }
 
 type Usecase struct {

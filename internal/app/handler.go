@@ -1,8 +1,9 @@
 package app
 
 import (
-	"fmt"
+	"io"
 	"net/http"
+	netUrl "net/url"
 
 	"github.com/AnnV0lokitina/short-url-service.git/internal/usecase"
 )
@@ -20,32 +21,33 @@ func NewHandler(usecase *usecase.Usecase) *Handler {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
-		if err := r.ParseForm(); err != nil {
-			http.Error(w, "No params", 400)
+		url, err := io.ReadAll(r.Body)
+		if err != nil {
+			http.Error(w, "Invalid request 1", 400)
 			return
 		}
-		url := r.FormValue("url")
-		if url == "" {
-			http.Error(w, "No url", 400)
+		_, err = netUrl.Parse(string(url))
+		if err != nil {
+			http.Error(w, "Invalid request 2", 400)
 			return
 		}
 
-		uuid, shortURL := h.usecase.SetURL(url)
+		urlInfo := h.usecase.SetURL(string(url))
 
-		showInfo := fmt.Sprintf("%s: %s", uuid, shortURL)
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(showInfo))
+		w.Write([]byte(urlInfo.Short))
 	case http.MethodGet:
 		path := r.URL.Path
 		id := path[1:]
-		full, short, err := h.usecase.GetURL(id)
+		urlInfo, err := h.usecase.GetURL(id)
 		if err != nil {
-			http.Error(w, "Invalid request", 400)
+			http.Error(w, "Invalid request 4", 400)
+			return
 		}
-		w.Header().Set("Location", full)
+		w.Header().Set("Location", urlInfo.Full)
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		w.Write([]byte(short))
+		w.Write([]byte(urlInfo.Short))
 	default:
-		http.Error(w, "Invalid request", 400)
+		http.Error(w, "Invalid request 5", 400)
 	}
 }

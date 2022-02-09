@@ -1,9 +1,13 @@
 package usecase
 
-func (u *Usecase) SetURL(full string) (string, string) {
-	collection := u.repo.GetInfo()
-	uuid, url := collection.Add(full)
-	u.repo.SetInfo(collection)
+import (
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+)
 
-	return uuid, url.Short
+func (u *Usecase) SetURL(fullURL string) *entity.URL {
+	url := entity.NewURL(fullURL, "")
+	url.CreateShortURL()
+	u.repo.SetURL(url)
+
+	return url
 }

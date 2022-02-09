@@ -46,7 +46,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Location", urlInfo.Full)
 		w.WriteHeader(http.StatusTemporaryRedirect)
-		w.Write([]byte(urlInfo.Short))
+		//w.Write([]byte(urlInfo.Short))
 	default:
 		http.Error(w, "Invalid request 5", 400)
 	}

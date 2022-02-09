@@ -23,7 +23,7 @@ func (u *URL) CreateShortURL() {
 }
 
 func createUUID(url string) string {
-	byteURl := []byte(url)
-	idByte := md5.Sum(byteURl)
+	byteURL := []byte(url)
+	idByte := md5.Sum(byteURL)
 	return fmt.Sprintf("%x", idByte)
 }

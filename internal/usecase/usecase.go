@@ -6,7 +6,7 @@ import (
 
 type Repo interface {
 	SetURL(url *entity.URL)
-	GetURL(shortURL string) (*entity.URL, error)
+	GetURL(uuid string) (*entity.URL, error)
 }
 
 type UsecaseInterface interface {

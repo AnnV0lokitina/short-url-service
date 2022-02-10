@@ -1,4 +1,4 @@
-package app
+package handler
 
 import (
 	"io"
@@ -22,13 +22,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
 		url, err := io.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "Invalid request 1", 400)
+		if err != nil || len(url) == 0 {
+			http.Error(w, "Invalid request 1", http.StatusBadRequest)
 			return
 		}
 		_, err = netUrl.Parse(string(url))
 		if err != nil {
-			http.Error(w, "Invalid request 2", 400)
+			http.Error(w, "Invalid request 2", http.StatusBadRequest)
 			return
 		}
 
@@ -41,12 +41,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		id := path[1:]
 		urlInfo, err := h.usecase.GetURL(id)
 		if err != nil {
-			http.Error(w, "Invalid request 4", 400)
+			http.Error(w, "Invalid request 4", http.StatusBadRequest)
 			return
 		}
 		w.Header().Set("Location", urlInfo.GetFullURL())
 		w.WriteHeader(http.StatusTemporaryRedirect)
 	default:
-		http.Error(w, "Invalid request 5", 400)
+		http.Error(w, "Invalid request 5", http.StatusBadRequest)
 	}
 }

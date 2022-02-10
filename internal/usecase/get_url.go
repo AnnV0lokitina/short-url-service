@@ -4,8 +4,8 @@ import (
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 )
 
-func (u *Usecase) GetURL(shortURL string) (*entity.URL, error) {
-	url, err := u.repo.GetURL(shortURL)
+func (u *Usecase) GetURL(uuid string) (*entity.URL, error) {
+	url, err := u.repo.GetURL(uuid)
 	if err != nil {
 		return nil, err
 	}

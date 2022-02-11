@@ -1,17 +1,39 @@
 package usecase
 
 import (
+	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
+type MockedRepo struct {
+	mock.Mock
+}
+
+var tmpURL *entity.URL
+
+func (r *MockedRepo) SetURL(url *entity.URL) {
+	tmpURL = url
+}
+
+func (r *MockedRepo) GetURL(uuid string) (*entity.URL, error) {
+	if uuid == "uuid" {
+		fullURL := "fullURL"
+		url := entity.NewURL(fullURL, uuid)
+		return url, nil
+	}
+	return nil, errors.New("no url saved")
+}
+
 func TestNewUsecase(t *testing.T) {
 	type args struct {
-		repo Repo
+		repo *MockedRepo
 	}
+	repo := new(MockedRepo)
 	tests := []struct {
 		name string
 		args args
@@ -20,10 +42,10 @@ func TestNewUsecase(t *testing.T) {
 		{
 			name: "test new usecase positive",
 			args: args{
-				repo: repo.NewRepo(),
+				repo: repo,
 			},
 			want: &Usecase{
-				repo: repo.NewRepo(),
+				repo: repo,
 			},
 		},
 	}
@@ -37,18 +59,13 @@ func TestNewUsecase(t *testing.T) {
 
 func TestUsecase_GetURL(t *testing.T) {
 	type fields struct {
-		repo Repo
+		repo *MockedRepo
 	}
 	type args struct {
 		uuid string
 	}
 
-	fullURL := "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	url := entity.NewURL(fullURL, "")
-	url.CreateUUID()
-
-	repoWithURL := repo.NewRepo()
-	repoWithURL.SetURL(url)
+	repoWithURL := new(MockedRepo)
 
 	tests := []struct {
 		name    string
@@ -63,9 +80,9 @@ func TestUsecase_GetURL(t *testing.T) {
 				repo: repoWithURL,
 			},
 			args: args{
-				uuid: url.GetUUID(),
+				uuid: "uuid",
 			},
-			want:    url,
+			want:    entity.NewURL("fullURL", "uuid"),
 			wantErr: false,
 		},
 		{
@@ -76,7 +93,7 @@ func TestUsecase_GetURL(t *testing.T) {
 			args: args{
 				uuid: "",
 			},
-			want:    url,
+			want:    entity.NewURL("fullURL", "uuid"),
 			wantErr: true,
 		},
 		{
@@ -87,7 +104,7 @@ func TestUsecase_GetURL(t *testing.T) {
 			args: args{
 				uuid: "illegal key",
 			},
-			want:    url,
+			want:    entity.NewURL("fullURL", "uuid"),
 			wantErr: true,
 		},
 	}
@@ -116,9 +133,9 @@ func TestUsecase_SetURL(t *testing.T) {
 		fullURL string
 	}
 
-	fullURL := "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	url := entity.NewURL(fullURL, "")
+	url := entity.NewURL("fullURL", "")
 	url.CreateUUID()
+
 	tests := []struct {
 		name   string
 		fields fields
@@ -131,7 +148,7 @@ func TestUsecase_SetURL(t *testing.T) {
 				repo: repo.NewRepo(),
 			},
 			args: args{
-				fullURL: url.GetFullURL(),
+				fullURL: "fullURL",
 			},
 			want: url,
 		},

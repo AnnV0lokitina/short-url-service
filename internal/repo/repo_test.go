@@ -2,7 +2,6 @@ package repo
 
 import (
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -34,7 +33,6 @@ func TestNewRepo(t *testing.T) {
 func TestRepo_GetURL(t *testing.T) {
 	type fields struct {
 		list map[string]string
-		mu   sync.Mutex
 	}
 	type args struct {
 		uuid string
@@ -91,7 +89,6 @@ func TestRepo_GetURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Repo{
 				list: tt.fields.list,
-				mu:   tt.fields.mu,
 			}
 			got, err := r.GetURL(tt.args.uuid)
 			if tt.wantErr == true {
@@ -107,7 +104,6 @@ func TestRepo_GetURL(t *testing.T) {
 func TestRepo_SetURL(t *testing.T) {
 	type fields struct {
 		list map[string]string
-		mu   sync.Mutex
 	}
 	type args struct {
 		url  *entity.URL
@@ -141,7 +137,6 @@ func TestRepo_SetURL(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Repo{
 				list: tt.fields.list,
-				mu:   tt.fields.mu,
 			}
 			r.SetURL(tt.args.url)
 

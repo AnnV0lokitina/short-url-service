@@ -1,4 +1,4 @@
-package app
+package main
 
 import (
 	"github.com/AnnV0lokitina/short-url-service.git/internal/handler"

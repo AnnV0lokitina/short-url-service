@@ -1,20 +1,29 @@
 package main
 
 import (
-	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/usecase"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"net/http"
 	"testing"
 )
 
+type AppInterface interface {
+	Run()
+}
+
+type MockedHandler struct {
+	mock.Mock
+}
+
+func (h MockedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func TestApp_Run(t *testing.T) {
 	type fields struct {
-		h *handlerPkg.Handler
+		h *MockedHandler
 	}
-	repository := repo.NewRepo()
-	services := usecase.NewUsecase(repository)
-	handler := handlerPkg.NewHandler(services)
+	handler := new(MockedHandler)
 	tests := []struct {
 		name   string
 		fields fields
@@ -31,18 +40,17 @@ func TestApp_Run(t *testing.T) {
 			app := &App{
 				h: tt.fields.h,
 			}
-			app.Run()
+			assert.Implements(t, (*AppInterface)(nil), app)
 		})
 	}
 }
 
 func TestNewApp(t *testing.T) {
 	type args struct {
-		handler *handlerPkg.Handler
+		handler *MockedHandler
 	}
-	repository := repo.NewRepo()
-	services := usecase.NewUsecase(repository)
-	handler := handlerPkg.NewHandler(services)
+
+	handler := new(MockedHandler)
 	tests := []struct {
 		name string
 		args args

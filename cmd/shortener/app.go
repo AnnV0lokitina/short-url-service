@@ -1,15 +1,18 @@
 package main
 
 import (
-	"github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	"net/http"
 )
 
-type App struct {
-	h *handler.Handler
+type Handler interface {
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
-func NewApp(handler *handler.Handler) *App {
+type App struct {
+	h Handler
+}
+
+func NewApp(handler Handler) *App {
 	return &App{
 		h: handler,
 	}

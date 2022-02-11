@@ -15,7 +15,7 @@ type MockedHandler struct {
 	mock.Mock
 }
 
-func (h MockedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *MockedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("123"))
 }
 

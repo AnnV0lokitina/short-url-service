@@ -16,7 +16,7 @@ type MockedHandler struct {
 }
 
 func (h MockedHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-
+	w.Write([]byte("123"))
 }
 
 func TestApp_Run(t *testing.T) {

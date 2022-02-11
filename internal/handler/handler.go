@@ -34,6 +34,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		urlInfo := h.usecase.SetURL(string(url))
 
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(urlInfo.GetShortURL()))
 	case http.MethodGet:

@@ -27,6 +27,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		body           string
 		headerLocation string
 		code           int
+		contentType    string
 	}
 	tests := []struct {
 		name    string
@@ -40,6 +41,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:           "",
 				headerLocation: "",
 				code:           http.StatusBadRequest,
+				contentType:    "",
 			},
 		},
 		{
@@ -49,6 +51,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:           "",
 				headerLocation: "",
 				code:           http.StatusBadRequest,
+				contentType:    "",
 			},
 		},
 		{
@@ -58,6 +61,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:           "",
 				headerLocation: "",
 				code:           http.StatusBadRequest,
+				contentType:    "",
 			},
 		},
 		{
@@ -67,6 +71,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:           url.GetShortURL(),
 				headerLocation: "",
 				code:           http.StatusCreated,
+				contentType:    "text/plain; charset=UTF-8",
 			},
 		},
 		{
@@ -76,6 +81,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:           "",
 				headerLocation: url.GetFullURL(),
 				code:           http.StatusTemporaryRedirect,
+				contentType:    "",
 			},
 		},
 		{
@@ -85,6 +91,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:           "",
 				headerLocation: "",
 				code:           http.StatusBadRequest,
+				contentType:    "",
 			},
 		},
 	}
@@ -94,14 +101,18 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			handler.ServeHTTP(w, tt.request)
 			res := w.Result()
 
-			assert.Equal(t, res.StatusCode, tt.result.code)
+			assert.Equal(t, tt.result.code, res.StatusCode)
 
 			defer res.Body.Close()
 			resBody, err := io.ReadAll(res.Body)
 			require.NoError(t, err)
 
-			if tt.result.body != "" && string(resBody) != tt.result.body {
-				assert.Equal(t, string(resBody), tt.result.body)
+			if tt.result.body != "" {
+				assert.Equal(t, tt.result.body, string(resBody))
+			}
+
+			if tt.result.contentType != "" {
+				assert.Equal(t, tt.result.contentType, res.Header.Get("Content-Type"))
 			}
 		})
 	}

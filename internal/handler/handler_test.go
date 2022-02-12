@@ -34,10 +34,15 @@ func (u *MockedUsecase) GetURL(uuid string) (*entity.URL, error) {
 }
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) (*http.Response, string) {
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 	req, err := http.NewRequest(method, ts.URL+path, body)
 	require.NoError(t, err)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := client.Do(req)
 	require.NoError(t, err)
 
 	defer resp.Body.Close()

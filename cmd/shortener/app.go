@@ -19,7 +19,5 @@ func NewApp(handler Handler) *App {
 }
 
 func (app *App) Run() {
-	http.Handle("/", app.h)
-
-	http.ListenAndServe("localhost:8080", nil)
+	http.ListenAndServe("localhost:8080", app.h)
 }

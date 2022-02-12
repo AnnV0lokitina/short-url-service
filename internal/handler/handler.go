@@ -1,26 +1,44 @@
 package handler
 
 import (
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	netUrl "net/url"
-
-	"github.com/AnnV0lokitina/short-url-service.git/internal/usecase"
 )
 
-type Handler struct {
-	usecase *usecase.Usecase
+type Usecase interface {
+	SetURL(fullURL string) *entity.URL
+	GetURL(uuid string) (*entity.URL, error)
 }
 
-func NewHandler(usecase *usecase.Usecase) *Handler {
-	return &Handler{
+type Handler struct {
+	*chi.Mux
+	usecase Usecase
+}
+
+func NewHandler(usecase Usecase) *Handler {
+	h := &Handler{
+		Mux:     chi.NewMux(),
 		usecase: usecase,
+	}
+
+	h.Post("/", h.SetURL())
+	h.Get("/{id}", h.GetURL())
+	h.MethodNotAllowed(h.ExecIfNotAllowed())
+
+	return h
+}
+
+func (h *Handler) ExecIfNotAllowed() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "Invalid request 5", http.StatusBadRequest)
 	}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
+func (h *Handler) SetURL() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		url, err := io.ReadAll(r.Body)
 		if err != nil || len(url) == 0 {
 			http.Error(w, "Invalid request 1", http.StatusBadRequest)
@@ -37,9 +55,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(urlInfo.GetShortURL()))
-	case http.MethodGet:
-		path := r.URL.Path
-		id := path[1:]
+	}
+}
+
+func (h *Handler) GetURL() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
 		urlInfo, err := h.usecase.GetURL(id)
 		if err != nil {
 			http.Error(w, "Invalid request 4", http.StatusBadRequest)
@@ -47,7 +68,5 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		w.Header().Set("Location", urlInfo.GetFullURL())
 		w.WriteHeader(http.StatusTemporaryRedirect)
-	default:
-		http.Error(w, "Invalid request 5", http.StatusBadRequest)
 	}
 }

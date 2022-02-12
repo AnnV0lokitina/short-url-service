@@ -9,11 +9,6 @@ type Repo interface {
 	GetURL(uuid string) (*entity.URL, error)
 }
 
-type UsecaseInterface interface {
-	SetURL(full string) (*entity.URL, error)
-	GetURL(uuid string) (*entity.URL, error)
-}
-
 type Usecase struct {
 	repo Repo
 }

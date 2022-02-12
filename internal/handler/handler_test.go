@@ -155,11 +155,11 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		},
 	}
 
-	ts := httptest.NewServer(handler)
-	defer ts.Close()
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			ts := httptest.NewServer(handler)
+			defer ts.Close()
+
 			resp, body := testRequest(t, ts, tt.request.method, tt.request.target, tt.request.body)
 			assert.Equal(t, tt.result.code, resp.StatusCode)
 

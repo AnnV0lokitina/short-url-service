@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/stretchr/testify/assert"
@@ -44,6 +45,17 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 	require.NoError(t, err)
 
 	return resp
+}
+
+func createJSONEncodedResponse(t *testing.T, responseURL string) string {
+	jsonResponse := JSONResponse{
+		Result: responseURL,
+	}
+
+	jsonEncodedResponse, err := json.Marshal(jsonResponse)
+	require.NoError(t, err)
+
+	return string(jsonEncodedResponse)
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
@@ -121,6 +133,76 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				headerLocation: "",
 				code:           http.StatusCreated,
 				contentType:    "text/plain; charset=UTF-8",
+			},
+		},
+		{
+			name: "test json-api create incorrect method",
+			request: request{
+				method: http.MethodPut,
+				target: "/api/shorten",
+				body:   nil,
+			},
+			result: result{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name: "test json-api create url no body",
+			request: request{
+				method: http.MethodPost,
+				target: "/api/shorten",
+				body:   nil,
+			},
+			result: result{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name: "test json-api create url incorrect json",
+			request: request{
+				method: http.MethodPost,
+				target: "/api/shorten",
+				body:   strings.NewReader("{\"url:\"http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m\"}"),
+			},
+			result: result{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name: "test json-api create url incorrect url",
+			request: request{
+				method: http.MethodPost,
+				target: "/api/shorten",
+				body:   strings.NewReader("{\"url\":\"////%%%%%%\"}"),
+			},
+			result: result{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name: "test json-api create url positive",
+			request: request{
+				method: http.MethodPost,
+				target: "/api/shorten",
+				body:   strings.NewReader("{\"url\":\"fullURL\"}"),
+			},
+			result: result{
+				body:           createJSONEncodedResponse(t, url.GetShortURL()),
+				headerLocation: "",
+				code:           http.StatusCreated,
+				contentType:    "application/json; charset=UTF-8",
 			},
 		},
 		{

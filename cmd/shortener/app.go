@@ -4,15 +4,11 @@ import (
 	"net/http"
 )
 
-type Handler interface {
-	ServeHTTP(w http.ResponseWriter, r *http.Request)
-}
-
 type App struct {
-	h Handler
+	h http.Handler
 }
 
-func NewApp(handler Handler) *App {
+func NewApp(handler http.Handler) *App {
 	return &App{
 		h: handler,
 	}

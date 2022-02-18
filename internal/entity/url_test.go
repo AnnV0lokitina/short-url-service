@@ -20,8 +20,8 @@ func createMD5Hash(url string) string {
 
 func TestNewURL(t *testing.T) {
 	type args struct {
-		fullURL string
-		uuid    string
+		fullURL  string
+		checksum string
 	}
 
 	tests := []struct {
@@ -32,54 +32,23 @@ func TestNewURL(t *testing.T) {
 		{
 			name: "test url created",
 			args: args{
-				fullURL: urlFullString,
-				uuid:    createMD5Hash(urlFullString),
+				fullURL:  urlFullString,
+				checksum: createMD5Hash(urlFullString),
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewURL(tt.args.fullURL, tt.args.uuid)
+			got := NewURL(tt.args.fullURL, tt.args.checksum)
 			assert.ObjectsAreEqual(got, tt.want)
-		})
-	}
-}
-
-func TestURL_CreateUUID(t *testing.T) {
-	type fields struct {
-		uuid string
-		full string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		{
-			name: "create uuid",
-			fields: fields{
-				uuid: "",
-				full: urlFullString,
-			},
-			want: createMD5Hash(urlFullString),
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			u := &URL{
-				uuid: tt.fields.uuid,
-				full: tt.fields.full,
-			}
-			u.CreateUUID()
-			assert.Equal(t, u.GetUUID(), tt.want)
 		})
 	}
 }
 
 func TestURL_GetFullURL(t *testing.T) {
 	type fields struct {
-		uuid string
-		full string
+		checksum string
+		full     string
 	}
 	tests := []struct {
 		name   string
@@ -89,8 +58,8 @@ func TestURL_GetFullURL(t *testing.T) {
 		{
 			name: "get full url",
 			fields: fields{
-				uuid: "",
-				full: urlFullString,
+				checksum: "",
+				full:     urlFullString,
 			},
 			want: urlFullString,
 		},
@@ -98,8 +67,8 @@ func TestURL_GetFullURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &URL{
-				uuid: tt.fields.uuid,
-				full: tt.fields.full,
+				checksum: tt.fields.checksum,
+				full:     tt.fields.full,
 			}
 			got := u.GetFullURL()
 			assert.Equal(t, got, tt.want)
@@ -109,8 +78,8 @@ func TestURL_GetFullURL(t *testing.T) {
 
 func TestURL_GetShortURL(t *testing.T) {
 	type fields struct {
-		uuid string
-		full string
+		checksum string
+		full     string
 	}
 	tests := []struct {
 		name   string
@@ -120,8 +89,8 @@ func TestURL_GetShortURL(t *testing.T) {
 		{
 			name: "get short url",
 			fields: fields{
-				uuid: createMD5Hash(urlFullString),
-				full: urlFullString,
+				checksum: createMD5Hash(urlFullString),
+				full:     urlFullString,
 			},
 			want: shortURLHost + createMD5Hash(urlFullString),
 		},
@@ -129,8 +98,8 @@ func TestURL_GetShortURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &URL{
-				uuid: tt.fields.uuid,
-				full: tt.fields.full,
+				checksum: tt.fields.checksum,
+				full:     tt.fields.full,
 			}
 			got := u.GetShortURL()
 			assert.Equal(t, got, tt.want)
@@ -138,10 +107,10 @@ func TestURL_GetShortURL(t *testing.T) {
 	}
 }
 
-func TestURL_GetUUID(t *testing.T) {
+func TestURL_GetChecksum(t *testing.T) {
 	type fields struct {
-		uuid string
-		full string
+		checksum string
+		full     string
 	}
 	tests := []struct {
 		name   string
@@ -149,18 +118,18 @@ func TestURL_GetUUID(t *testing.T) {
 		want   string
 	}{
 		{
-			name: "get uuid",
+			name: "get checksum",
 			fields: fields{
-				uuid: createMD5Hash(urlFullString),
-				full: urlFullString,
+				checksum: createMD5Hash(urlFullString),
+				full:     urlFullString,
 			},
 			want: createMD5Hash(urlFullString),
 		},
 		{
-			name: "get uuid empty",
+			name: "get checksum empty",
 			fields: fields{
-				uuid: "",
-				full: urlFullString,
+				checksum: "",
+				full:     urlFullString,
 			},
 			want: "",
 		},
@@ -168,16 +137,16 @@ func TestURL_GetUUID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			u := &URL{
-				uuid: tt.fields.uuid,
-				full: tt.fields.full,
+				checksum: tt.fields.checksum,
+				full:     tt.fields.full,
 			}
-			got := u.GetUUID()
+			got := u.GetChecksum()
 			assert.Equal(t, got, tt.want)
 		})
 	}
 }
 
-func Test_createUUID(t *testing.T) {
+func Test_createChecksum(t *testing.T) {
 	type args struct {
 		url string
 	}
@@ -203,8 +172,33 @@ func Test_createUUID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := createUUID(tt.args.url)
+			got := createChecksum(tt.args.url)
 			assert.Equal(t, got, tt.want)
+		})
+	}
+}
+
+func TestNewURLFromFullLink(t *testing.T) {
+	type args struct {
+		fullURL string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *URL
+	}{
+		{
+			name: "create checksum",
+			args: args{
+				fullURL: urlFullString,
+			},
+			want: NewURL(urlFullString, createMD5Hash(urlFullString)),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			url := NewURLFromFullLink(tt.args.fullURL)
+			assert.Equalf(t, tt.want, url, "NewURLFromFullLink(%v)", tt.args.fullURL)
 		})
 	}
 }

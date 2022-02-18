@@ -14,21 +14,19 @@ import (
 	"testing"
 )
 
-var storedFullURL = ""
+var tmpURL *entity.URL
 
-type MockedUsecase struct {
+type MockedRepo struct {
 	mock.Mock
 }
 
-func (u *MockedUsecase) SetURL(fullURL string) *entity.URL {
-	storedFullURL = fullURL
-	return entity.NewURL(fullURL, "uuid")
+func (r *MockedRepo) SetURL(url *entity.URL) {
+	tmpURL = url
 }
 
-func (u *MockedUsecase) GetURL(uuid string) (*entity.URL, error) {
-	if uuid == "uuid" {
-		url := entity.NewURL(storedFullURL, uuid)
-		return url, nil
+func (r *MockedRepo) GetURL(checksum string) (*entity.URL, error) {
+	if checksum == tmpURL.GetChecksum() {
+		return tmpURL, nil
 	}
 	return nil, errors.New("no url saved")
 }
@@ -49,9 +47,9 @@ func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
-	service := new(MockedUsecase)
-	handler := NewHandler(service)
-	url := service.SetURL("fullURL")
+	repo := new(MockedRepo)
+	handler := NewHandler(repo)
+	url := entity.NewURLFromFullLink("fullURL")
 
 	type request struct {
 		method string
@@ -129,7 +127,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			name: "test read url positive",
 			request: request{
 				method: http.MethodGet,
-				target: "/" + url.GetUUID(),
+				target: "/" + url.GetChecksum(),
 				body:   nil,
 			},
 			result: result{
@@ -180,10 +178,10 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 func TestNewHandler(t *testing.T) {
 	type args struct {
-		usecase Usecase
+		repo Repo
 	}
 
-	services := new(MockedUsecase)
+	repo := new(MockedRepo)
 
 	tests := []struct {
 		name string
@@ -193,16 +191,16 @@ func TestNewHandler(t *testing.T) {
 		{
 			name: "create new handler",
 			args: args{
-				usecase: services,
+				repo: repo,
 			},
 			want: &Handler{
-				usecase: services,
+				repo: repo,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewHandler(tt.args.usecase)
+			got := NewHandler(tt.args.repo)
 			assert.ObjectsAreEqual(got, tt.want)
 		})
 	}

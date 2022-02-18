@@ -7,19 +7,20 @@ import (
 )
 
 type URL struct {
-	uuid string
-	full string
+	checksum string
+	full     string
 }
 
-func NewURL(fullURL string, uuid string) *URL {
+func NewURL(fullURL string, checksum string) *URL {
 	return &URL{
-		uuid: uuid,
-		full: fullURL,
+		checksum: checksum,
+		full:     fullURL,
 	}
 }
 
-func (u *URL) CreateUUID() {
-	u.uuid = createUUID(u.full)
+func NewURLFromFullLink(fullURL string) *URL {
+	checksum := createChecksum(fullURL)
+	return NewURL(fullURL, checksum)
 }
 
 func (u *URL) GetFullURL() string {
@@ -27,14 +28,14 @@ func (u *URL) GetFullURL() string {
 }
 
 func (u *URL) GetShortURL() string {
-	return "http://localhost:8080/" + u.uuid
+	return "http://localhost:8080/" + u.checksum
 }
 
-func (u *URL) GetUUID() string {
-	return u.uuid
+func (u *URL) GetChecksum() string {
+	return u.checksum
 }
 
-func createUUID(url string) string {
+func createChecksum(url string) string {
 	byteURL := []byte(url)
 	idByte := md5.Sum(byteURL)
 	return fmt.Sprintf("%x", idByte)

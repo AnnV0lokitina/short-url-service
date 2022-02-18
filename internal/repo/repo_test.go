@@ -35,14 +35,13 @@ func TestRepo_GetURL(t *testing.T) {
 		list map[string]string
 	}
 	type args struct {
-		uuid string
+		checksum string
 	}
 
 	fullURL := "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	url := entity.NewURL(fullURL, "")
-	url.CreateUUID()
+	url := entity.NewURLFromFullLink(fullURL)
 	list := make(map[string]string)
-	list[url.GetUUID()] = url.GetFullURL()
+	list[url.GetChecksum()] = url.GetFullURL()
 
 	tests := []struct {
 		name    string
@@ -57,7 +56,7 @@ func TestRepo_GetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				uuid: url.GetUUID(),
+				checksum: url.GetChecksum(),
 			},
 			want:    url,
 			wantErr: false,
@@ -68,7 +67,7 @@ func TestRepo_GetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				uuid: "invalid uuid",
+				checksum: "invalid checksum",
 			},
 			want:    url,
 			wantErr: true,
@@ -79,7 +78,7 @@ func TestRepo_GetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				uuid: "",
+				checksum: "",
 			},
 			want:    url,
 			wantErr: true,
@@ -90,7 +89,7 @@ func TestRepo_GetURL(t *testing.T) {
 			r := &Repo{
 				list: tt.fields.list,
 			}
-			got, err := r.GetURL(tt.args.uuid)
+			got, err := r.GetURL(tt.args.checksum)
 			if tt.wantErr == true {
 				require.Error(t, err)
 				return
@@ -106,13 +105,12 @@ func TestRepo_SetURL(t *testing.T) {
 		list map[string]string
 	}
 	type args struct {
-		url  *entity.URL
-		uuid string
+		url      *entity.URL
+		checksum string
 	}
 
 	fullURL := "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	url := entity.NewURL(fullURL, "")
-	url.CreateUUID()
+	url := entity.NewURLFromFullLink(fullURL)
 	list := make(map[string]string)
 
 	tests := []struct {
@@ -127,8 +125,8 @@ func TestRepo_SetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				url:  url,
-				uuid: url.GetUUID(),
+				url:      url,
+				checksum: url.GetChecksum(),
 			},
 			wantErr: false,
 		},
@@ -140,7 +138,7 @@ func TestRepo_SetURL(t *testing.T) {
 			}
 			r.SetURL(tt.args.url)
 
-			receiveURL, err := r.GetURL(tt.args.uuid)
+			receiveURL, err := r.GetURL(tt.args.checksum)
 
 			if tt.wantErr == true {
 				require.Error(t, err)
@@ -150,7 +148,7 @@ func TestRepo_SetURL(t *testing.T) {
 
 			assert.Equal(t, tt.args.url.GetShortURL(), receiveURL.GetShortURL())
 			assert.Equal(t, tt.args.url.GetFullURL(), receiveURL.GetFullURL())
-			assert.Equal(t, tt.args.url.GetUUID(), receiveURL.GetUUID())
+			assert.Equal(t, tt.args.url.GetChecksum(), receiveURL.GetChecksum())
 		})
 	}
 }

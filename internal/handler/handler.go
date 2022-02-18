@@ -8,20 +8,20 @@ import (
 	netUrl "net/url"
 )
 
-type Usecase interface {
-	SetURL(fullURL string) *entity.URL
-	GetURL(uuid string) (*entity.URL, error)
+type Repo interface {
+	SetURL(url *entity.URL)
+	GetURL(checksum string) (*entity.URL, error)
 }
 
 type Handler struct {
 	*chi.Mux
-	usecase Usecase
+	repo Repo
 }
 
-func NewHandler(usecase Usecase) *Handler {
+func NewHandler(repo Repo) *Handler {
 	h := &Handler{
-		Mux:     chi.NewMux(),
-		usecase: usecase,
+		Mux:  chi.NewMux(),
+		repo: repo,
 	}
 
 	h.Post("/", h.SetURL())
@@ -50,7 +50,8 @@ func (h *Handler) SetURL() http.HandlerFunc {
 			return
 		}
 
-		urlInfo := h.usecase.SetURL(string(url))
+		urlInfo := entity.NewURLFromFullLink(string(url))
+		h.repo.SetURL(urlInfo)
 
 		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusCreated)
@@ -61,7 +62,7 @@ func (h *Handler) SetURL() http.HandlerFunc {
 func (h *Handler) GetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		urlInfo, err := h.usecase.GetURL(id)
+		urlInfo, err := h.repo.GetURL(id)
 		if err != nil {
 			http.Error(w, "Invalid request 4", http.StatusBadRequest)
 			return

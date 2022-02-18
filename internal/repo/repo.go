@@ -17,14 +17,14 @@ func NewRepo() *Repo {
 }
 
 func (r *Repo) SetURL(url *entity.URL) {
-	r.list[url.GetUUID()] = url.GetFullURL()
+	r.list[url.GetChecksum()] = url.GetFullURL()
 }
 
-func (r *Repo) GetURL(uuid string) (*entity.URL, error) {
-	fullURL, ok := r.list[uuid]
+func (r *Repo) GetURL(checksum string) (*entity.URL, error) {
+	fullURL, ok := r.list[checksum]
 	if !ok {
 		return nil, errors.New("no url saved")
 	}
-	url := entity.NewURL(fullURL, uuid)
+	url := entity.NewURL(fullURL, checksum)
 	return url, nil
 }

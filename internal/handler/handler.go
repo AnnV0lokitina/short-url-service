@@ -16,7 +16,8 @@ type Repo interface {
 
 type Handler struct {
 	*chi.Mux
-	repo Repo
+	repo    Repo
+	baseURL string
 }
 
 type JSONRequest struct {
@@ -27,10 +28,11 @@ type JSONResponse struct {
 	Result string `json:"result"`
 }
 
-func NewHandler(repo Repo) *Handler {
+func NewHandler(baseURL string, repo Repo) *Handler {
 	h := &Handler{
-		Mux:  chi.NewMux(),
-		repo: repo,
+		Mux:     chi.NewMux(),
+		repo:    repo,
+		baseURL: baseURL,
 	}
 
 	h.Post("/", h.SetURL())
@@ -71,7 +73,7 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 		h.repo.SetURL(urlInfo)
 
 		jsonResponse := JSONResponse{
-			Result: urlInfo.GetShortURL(),
+			Result: urlInfo.GetShortURL(h.baseURL),
 		}
 
 		response, err := json.Marshal(jsonResponse)
@@ -104,7 +106,7 @@ func (h *Handler) SetURL() http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(urlInfo.GetShortURL()))
+		w.Write([]byte(urlInfo.GetShortURL(h.baseURL)))
 	}
 }
 

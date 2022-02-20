@@ -101,7 +101,7 @@ func TestURL_GetShortURL(t *testing.T) {
 				checksum: tt.fields.checksum,
 				full:     tt.fields.full,
 			}
-			got := u.GetShortURL()
+			got := u.GetShortURL(shortURLHost)
 			assert.Equal(t, got, tt.want)
 		})
 	}

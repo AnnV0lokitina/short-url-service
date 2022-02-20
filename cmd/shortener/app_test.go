@@ -8,7 +8,7 @@ import (
 )
 
 type AppInterface interface {
-	Run()
+	Run(serverAddress string)
 }
 
 type MockedHandler struct {

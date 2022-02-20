@@ -14,6 +14,6 @@ func NewApp(handler http.Handler) *App {
 	}
 }
 
-func (app *App) Run() {
-	http.ListenAndServe("localhost:8080", app.h)
+func (app *App) Run(serverAddress string) {
+	http.ListenAndServe(serverAddress, app.h)
 }

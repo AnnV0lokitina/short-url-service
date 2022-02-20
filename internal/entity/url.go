@@ -27,8 +27,8 @@ func (u *URL) GetFullURL() string {
 	return u.full
 }
 
-func (u *URL) GetShortURL() string {
-	return "http://localhost:8080/" + u.checksum
+func (u *URL) GetShortURL(serverAddress string) string {
+	return serverAddress + u.checksum
 }
 
 func (u *URL) GetChecksum() string {

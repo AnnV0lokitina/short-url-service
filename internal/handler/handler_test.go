@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"github.com/caarlos0/env/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -30,6 +31,11 @@ func (r *MockedRepo) GetURL(checksum string) (*entity.URL, error) {
 		return tmpURL, nil
 	}
 	return nil, errors.New("no url saved")
+}
+
+type config struct {
+	ServerAddress string `env:"SERVER_ADDRESS"  envDefault:"localhost:8080"`
+	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080/"`
 }
 
 func testRequest(t *testing.T, ts *httptest.Server, method, path string, body io.Reader) *http.Response {
@@ -59,8 +65,12 @@ func createJSONEncodedResponse(t *testing.T, responseURL string) string {
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
+	cfg := config{}
+	err := env.Parse(&cfg)
+	require.NoError(t, err)
+
 	repo := new(MockedRepo)
-	handler := NewHandler(repo)
+	handler := NewHandler(cfg.BaseURL, repo)
 	url := entity.NewURLFromFullLink("fullURL")
 
 	type request struct {
@@ -129,7 +139,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:   strings.NewReader("fullURL"),
 			},
 			result: result{
-				body:           url.GetShortURL(),
+				body:           url.GetShortURL(cfg.BaseURL),
 				headerLocation: "",
 				code:           http.StatusCreated,
 				contentType:    "text/plain; charset=UTF-8",
@@ -199,7 +209,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 				body:   strings.NewReader("{\"url\":\"fullURL\"}"),
 			},
 			result: result{
-				body:           createJSONEncodedResponse(t, url.GetShortURL()),
+				body:           createJSONEncodedResponse(t, url.GetShortURL(cfg.BaseURL)),
 				headerLocation: "",
 				code:           http.StatusCreated,
 				contentType:    "application/json; charset=UTF-8",
@@ -259,8 +269,13 @@ func TestHandler_ServeHTTP(t *testing.T) {
 }
 
 func TestNewHandler(t *testing.T) {
+	cfg := config{}
+	err := env.Parse(&cfg)
+	require.NoError(t, err)
+
 	type args struct {
-		repo Repo
+		repo    Repo
+		baseURL string
 	}
 
 	repo := new(MockedRepo)
@@ -273,16 +288,18 @@ func TestNewHandler(t *testing.T) {
 		{
 			name: "create new handler",
 			args: args{
-				repo: repo,
+				repo:    repo,
+				baseURL: cfg.BaseURL,
 			},
 			want: &Handler{
-				repo: repo,
+				repo:    repo,
+				baseURL: cfg.BaseURL,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewHandler(tt.args.repo)
+			got := NewHandler(tt.args.baseURL, tt.args.repo)
 			assert.ObjectsAreEqual(got, tt.want)
 		})
 	}

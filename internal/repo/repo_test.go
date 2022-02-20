@@ -8,6 +8,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	urlFullString = "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
+	shortURLHost  = "http://localhost:8080/"
+)
+
 func TestNewRepo(t *testing.T) {
 	list := make(map[string]string)
 
@@ -38,8 +43,7 @@ func TestRepo_GetURL(t *testing.T) {
 		checksum string
 	}
 
-	fullURL := "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	url := entity.NewURLFromFullLink(fullURL)
+	url := entity.NewURLFromFullLink(urlFullString)
 	list := make(map[string]string)
 	list[url.GetChecksum()] = url.GetFullURL()
 
@@ -109,8 +113,7 @@ func TestRepo_SetURL(t *testing.T) {
 		checksum string
 	}
 
-	fullURL := "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	url := entity.NewURLFromFullLink(fullURL)
+	url := entity.NewURLFromFullLink(urlFullString)
 	list := make(map[string]string)
 
 	tests := []struct {
@@ -146,7 +149,7 @@ func TestRepo_SetURL(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.args.url.GetShortURL(), receiveURL.GetShortURL())
+			assert.Equal(t, tt.args.url.GetShortURL(shortURLHost), receiveURL.GetShortURL(shortURLHost))
 			assert.Equal(t, tt.args.url.GetFullURL(), receiveURL.GetFullURL())
 			assert.Equal(t, tt.args.url.GetChecksum(), receiveURL.GetChecksum())
 		})

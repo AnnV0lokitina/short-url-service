@@ -92,7 +92,7 @@ func TestURL_GetShortURL(t *testing.T) {
 				checksum: createMD5Hash(urlFullString),
 				full:     urlFullString,
 			},
-			want: shortURLHost + createMD5Hash(urlFullString),
+			want: shortURLHost + "/" + createMD5Hash(urlFullString),
 		},
 	}
 	for _, tt := range tests {

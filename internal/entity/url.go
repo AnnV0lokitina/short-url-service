@@ -28,7 +28,7 @@ func (u *URL) GetFullURL() string {
 }
 
 func (u *URL) GetShortURL(serverAddress string) string {
-	return serverAddress + u.checksum
+	return serverAddress + "/" + u.checksum
 }
 
 func (u *URL) GetChecksum() string {

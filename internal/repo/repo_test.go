@@ -10,7 +10,7 @@ import (
 
 const (
 	urlFullString = "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	shortURLHost  = "http://localhost:8080/"
+	shortURLHost  = "http://localhost:8080"
 )
 
 func TestNewRepo(t *testing.T) {

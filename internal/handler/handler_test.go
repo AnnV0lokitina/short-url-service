@@ -16,14 +16,21 @@ import (
 	"testing"
 )
 
-var tmpURL *entity.URL
+var (
+	tmpURL      *entity.URL
+	tmpURLError = false
+)
 
 type MockedRepo struct {
 	mock.Mock
 }
 
-func (r *MockedRepo) SetURL(url *entity.URL) {
+func (r *MockedRepo) SetURL(url *entity.URL) error {
+	if tmpURLError == true {
+		return errors.New("error")
+	}
 	tmpURL = url
+	return nil
 }
 
 func (r *MockedRepo) GetURL(checksum string) (*entity.URL, error) {
@@ -85,12 +92,14 @@ func TestHandler_ServeHTTP(t *testing.T) {
 		contentType    string
 	}
 	tests := []struct {
-		name    string
-		request request
-		result  result
+		name        string
+		setURLError bool
+		request     request
+		result      result
 	}{
 		{
-			name: "test create incorrect method",
+			name:        "test create incorrect method",
+			setURLError: false,
 			request: request{
 				method: http.MethodPut,
 				target: "/",
@@ -104,7 +113,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test create url no body",
+			name:        "test create url no body",
+			setURLError: false,
 			request: request{
 				method: http.MethodPost,
 				target: "/",
@@ -118,7 +128,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test create url incorrect url",
+			name:        "test create url incorrect url",
+			setURLError: false,
 			request: request{
 				method: http.MethodPost,
 				target: "/",
@@ -132,7 +143,23 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test create url positive",
+			name:        "test set url error",
+			setURLError: true,
+			request: request{
+				method: http.MethodPost,
+				target: "/",
+				body:   strings.NewReader("fullURL"),
+			},
+			result: result{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "test create url positive",
+			setURLError: false,
 			request: request{
 				method: http.MethodPost,
 				target: "/",
@@ -146,7 +173,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test json-api create incorrect method",
+			name:        "test json-api create incorrect method",
+			setURLError: false,
 			request: request{
 				method: http.MethodPut,
 				target: "/api/shorten",
@@ -160,7 +188,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test json-api create url no body",
+			name:        "test json-api create url no body",
+			setURLError: false,
 			request: request{
 				method: http.MethodPost,
 				target: "/api/shorten",
@@ -174,7 +203,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test json-api create url incorrect json",
+			name:        "test json-api create url incorrect json",
+			setURLError: false,
 			request: request{
 				method: http.MethodPost,
 				target: "/api/shorten",
@@ -188,7 +218,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test json-api create url incorrect url",
+			name:        "test json-api create url incorrect url",
+			setURLError: false,
 			request: request{
 				method: http.MethodPost,
 				target: "/api/shorten",
@@ -202,7 +233,23 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test json-api create url positive",
+			name:        "test json-api set url error",
+			setURLError: true,
+			request: request{
+				method: http.MethodPost,
+				target: "/api/shorten",
+				body:   strings.NewReader("{\"url\":\"fullURL\"}"),
+			},
+			result: result{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "test json-api create url positive",
+			setURLError: false,
 			request: request{
 				method: http.MethodPost,
 				target: "/api/shorten",
@@ -216,7 +263,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test read url positive",
+			name:        "test read url positive",
+			setURLError: false,
 			request: request{
 				method: http.MethodGet,
 				target: "/" + url.GetChecksum(),
@@ -230,7 +278,8 @@ func TestHandler_ServeHTTP(t *testing.T) {
 			},
 		},
 		{
-			name: "test read url no id",
+			name:        "test read url no id",
+			setURLError: false,
 			request: request{
 				method: http.MethodGet,
 				target: "/",
@@ -250,6 +299,7 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			tmpURLError = tt.setURLError
 			resp := testRequest(t, ts, tt.request.method, tt.request.target, tt.request.body)
 			assert.Equal(t, tt.result.code, resp.StatusCode)
 

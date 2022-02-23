@@ -7,8 +7,9 @@ import (
 )
 
 type config struct {
-	ServerAddress string `env:"SERVER_ADDRESS"  envDefault:"localhost:8080"`
-	BaseURL       string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	ServerAddress   string  `env:"SERVER_ADDRESS"  envDefault:"localhost:8080"`
+	BaseURL         string  `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	FileStoragePath *string `env:"FILE_STORAGE_PATH" envDefault:${nil}`
 }
 
 func main() {
@@ -17,7 +18,11 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	repository := repo.NewRepo()
+	repository, err := repo.NewRepo(cfg.FileStoragePath)
+	if err != nil {
+		panic(err)
+	}
+	defer repository.Close()
 	handler := handlerPkg.NewHandler(cfg.BaseURL, repository)
 	application := NewApp(handler)
 	application.Run(cfg.ServerAddress)

@@ -1,9 +1,8 @@
 package entity
 
 import (
-	"fmt"
-
 	"crypto/md5"
+	"fmt"
 )
 
 type URL struct {

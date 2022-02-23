@@ -2,6 +2,7 @@ package repo
 
 import (
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -9,30 +10,80 @@ import (
 )
 
 const (
-	urlFullString = "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
-	shortURLHost  = "http://localhost:8080"
+	urlFullString      = "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
+	shortURLHost       = "http://localhost:8080"
+	testReaderFileName = "/test_reader"
 )
 
 func TestNewRepo(t *testing.T) {
-	list := make(map[string]string)
+	type args struct {
+		filePath    string
+		fileContent string
+	}
+
+	type want struct {
+		repo       *Repo
+		listLength int
+	}
+
+	tmpDir := os.TempDir()
+	testDir, err := os.MkdirTemp(tmpDir, "test")
+	require.NoError(t, err)
 
 	tests := []struct {
 		name string
-		want *Repo
+		args *args
+		want want
 	}{
 		{
 			name: "test new repo positive",
-			want: &Repo{
-				list: list,
+			args: &args{
+				filePath:    testDir + testReaderFileName,
+				fileContent: "{\"checksum\":\"checksum\",\"full_url\":\"full\"}\n",
+			},
+			want: want{
+				repo: &Repo{
+					list: map[string]string{"checksum": "full"},
+				},
+				listLength: 1,
+			},
+		},
+		{
+			name: "test new repo positive",
+			args: nil,
+			want: want{
+				repo: &Repo{
+					list: make(map[string]string),
+				},
+				listLength: 1,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewRepo()
+			if tt.args != nil {
+				file, err := os.Create(tt.args.filePath)
+				require.NoError(t, err)
+				_, err = file.Write([]byte(tt.args.fileContent))
+				require.NoError(t, err)
+				err = file.Close()
+				require.NoError(t, err)
+
+				got, err := NewRepo(&tt.args.filePath)
+				require.NoError(t, err)
+				assert.ObjectsAreEqual(got, tt.want)
+				assert.Equal(t, len(got.list), 1, "NewRepo(nil)")
+
+				os.Remove(tt.args.filePath)
+			}
+			got, err := NewRepo(nil)
+			require.NoError(t, err)
+			assert.Equal(t, len(got.list), 0, "NewRepo(nil)")
 			assert.ObjectsAreEqual(got, tt.want)
 		})
 	}
+
+	os.RemoveAll(testDir)
 }
 
 func TestRepo_GetURL(t *testing.T) {
@@ -139,7 +190,8 @@ func TestRepo_SetURL(t *testing.T) {
 			r := &Repo{
 				list: tt.fields.list,
 			}
-			r.SetURL(tt.args.url)
+			err := r.SetURL(tt.args.url)
+			require.NoError(t, err)
 
 			receiveURL, err := r.GetURL(tt.args.checksum)
 

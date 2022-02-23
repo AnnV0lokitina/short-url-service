@@ -10,7 +10,7 @@ import (
 )
 
 type Repo interface {
-	SetURL(url *entity.URL)
+	SetURL(url *entity.URL) error
 	GetURL(checksum string) (*entity.URL, error)
 }
 
@@ -70,7 +70,11 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 		}
 
 		urlInfo := entity.NewURLFromFullLink(parsedRequest.URL)
-		h.repo.SetURL(urlInfo)
+		err = h.repo.SetURL(urlInfo)
+		if err != nil {
+			http.Error(w, "Invalid request 10", http.StatusBadRequest)
+			return
+		}
 
 		jsonResponse := JSONResponse{
 			Result: urlInfo.GetShortURL(h.baseURL),
@@ -102,7 +106,11 @@ func (h *Handler) SetURL() http.HandlerFunc {
 		}
 
 		urlInfo := entity.NewURLFromFullLink(string(url))
-		h.repo.SetURL(urlInfo)
+		err = h.repo.SetURL(urlInfo)
+		if err != nil {
+			http.Error(w, "Invalid request 10", http.StatusBadRequest)
+			return
+		}
 
 		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		w.WriteHeader(http.StatusCreated)

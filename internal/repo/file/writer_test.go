@@ -64,7 +64,7 @@ func TestNewWriter(t *testing.T) {
 			assert.Implements(t, tt.want.interfaceObject, w, "Invalid writer interface")
 			assert.FileExistsf(t, tt.args.filePath, "file path %v", tt.args.filePath)
 			tt.wantURLErr(t, w.WriteURL(tt.args.url), fmt.Sprintf("WriteURL(%v)", tt.args.url))
-			tt.wantCloseErr(t, w.Close(), fmt.Sprintf("Close()"))
+			tt.wantCloseErr(t, w.Close(), "Close()")
 
 			file, err := os.Open(tt.args.filePath)
 			require.NoError(t, err)

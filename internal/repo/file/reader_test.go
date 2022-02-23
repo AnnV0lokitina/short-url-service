@@ -72,12 +72,12 @@ func TestNewReader(t *testing.T) {
 			assert.Implements(t, tt.want.interfaceObject, r, "Invalid reader interface")
 			assert.Equalf(t, true, r.HasNext(), "HasNext()")
 			url, err := r.ReadURL()
-			if !tt.wantURLErr(t, err, fmt.Sprintf("ReadURL()")) {
+			if !tt.wantURLErr(t, err, "ReadURL()") {
 				return
 			}
 			assert.Equalf(t, tt.want.url, url, "ReadURL()")
 			assert.Equalf(t, false, r.HasNext(), "HasNext()")
-			tt.wantCloseErr(t, r.Close(), fmt.Sprintf("Close()"))
+			tt.wantCloseErr(t, r.Close(), "Close()")
 			os.Remove(tt.args.filePath)
 		})
 	}

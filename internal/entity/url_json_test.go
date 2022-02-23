@@ -36,7 +36,7 @@ func TestURL_MarshalJSON(t *testing.T) {
 				full:     tt.fields.full,
 			}
 			got, err := json.Marshal(u)
-			if !tt.wantErr(t, err, fmt.Sprintf("MarshalJSON()")) {
+			if !tt.wantErr(t, err, "MarshalJSON()") {
 				return
 			}
 			assert.Equalf(t, tt.want, got, "MarshalJSON()")

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/caarlos0/env/v6"
@@ -12,12 +13,27 @@ type config struct {
 	FileStoragePath *string `env:"FILE_STORAGE_PATH"`
 }
 
-func main() {
-	var cfg config
+var cfg config
+
+func init() {
 	err := env.Parse(&cfg)
 	if err != nil {
 		panic(err)
 	}
+
+	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Server address")
+	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Base URL")
+	flag.Func("f", "File storage path", func(path string) error {
+		if path != "" {
+			cfg.FileStoragePath = &path
+			return nil
+		}
+		return nil
+	})
+	flag.Parse()
+}
+
+func main() {
 	repository, err := repo.NewRepo(cfg.FileStoragePath)
 	if err != nil {
 		panic(err)

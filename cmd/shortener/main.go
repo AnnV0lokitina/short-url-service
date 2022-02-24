@@ -30,10 +30,10 @@ func init() {
 		}
 		return nil
 	})
-	flag.Parse()
 }
 
 func main() {
+	flag.Parse()
 	repository, err := repo.NewRepo(cfg.FileStoragePath)
 	if err != nil {
 		panic(err)

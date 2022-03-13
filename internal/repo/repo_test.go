@@ -15,7 +15,30 @@ const (
 	testReaderFileName = "/test_reader"
 )
 
-func TestNewRepo(t *testing.T) {
+func TestNewMemoryRepo(t *testing.T) {
+	list := make(map[string]string)
+
+	tests := []struct {
+		name string
+		want *Repo
+	}{
+		{
+			name: "test new repo positive",
+			want: &Repo{
+				list:   list,
+				writer: nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewMemoryRepo()
+			assert.ObjectsAreEqual(got, tt.want)
+		})
+	}
+}
+
+func TestNewFileRepo(t *testing.T) {
 	type args struct {
 		filePath    string
 		fileContent string
@@ -48,38 +71,21 @@ func TestNewRepo(t *testing.T) {
 				listLength: 1,
 			},
 		},
-		{
-			name: "test new repo positive",
-			args: nil,
-			want: want{
-				repo: &Repo{
-					list: make(map[string]string),
-				},
-				listLength: 1,
-			},
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if tt.args != nil {
-				file, err := os.Create(tt.args.filePath)
-				require.NoError(t, err)
-				_, err = file.Write([]byte(tt.args.fileContent))
-				require.NoError(t, err)
-				err = file.Close()
-				require.NoError(t, err)
-
-				got, err := NewRepo(&tt.args.filePath)
-				require.NoError(t, err)
-				assert.ObjectsAreEqual(got, tt.want)
-				assert.Equal(t, len(got.list), 1, "NewRepo(nil)")
-
-				os.Remove(tt.args.filePath)
-			}
-			got, err := NewRepo(nil)
+			file, err := os.Create(tt.args.filePath)
 			require.NoError(t, err)
-			assert.Equal(t, len(got.list), 0, "NewRepo(nil)")
+			_, err = file.Write([]byte(tt.args.fileContent))
+			require.NoError(t, err)
+			err = file.Close()
+			require.NoError(t, err)
+
+			got, err := NewFileRepo(tt.args.filePath)
+			require.NoError(t, err)
 			assert.ObjectsAreEqual(got, tt.want)
+			assert.Equal(t, len(got.list), 1, "NewRepo(nil)")
+			os.Remove(tt.args.filePath)
 		})
 	}
 

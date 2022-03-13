@@ -29,18 +29,12 @@ func createFilledList(filePath string) (*map[string]string, error) {
 	return &list, nil
 }
 
-func NewRepo(filePath *string) (*Repo, error) {
-	if filePath == nil {
-		return &Repo{
-			list:   make(map[string]string),
-			writer: nil,
-		}, nil
-	}
-	list, err := createFilledList(*filePath)
+func NewFileRepo(filePath string) (*Repo, error) {
+	list, err := createFilledList(filePath)
 	if err != nil {
 		return nil, err
 	}
-	writer, err := file.NewWriter(*filePath)
+	writer, err := file.NewWriter(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -49,6 +43,13 @@ func NewRepo(filePath *string) (*Repo, error) {
 		list:   *list,
 		writer: writer,
 	}, nil
+}
+
+func NewMemoryRepo() *Repo {
+	return &Repo{
+		list:   make(map[string]string),
+		writer: nil,
+	}
 }
 
 func (r *Repo) Close() error {

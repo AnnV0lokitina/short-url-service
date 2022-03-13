@@ -5,38 +5,39 @@ import (
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/caarlos0/env/v6"
+	"log"
 )
 
 type config struct {
-	ServerAddress   string  `env:"SERVER_ADDRESS"  envDefault:"localhost:8080"`
-	BaseURL         string  `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStoragePath *string `env:"FILE_STORAGE_PATH"`
+	ServerAddress   string `env:"SERVER_ADDRESS"  envDefault:"localhost:8080"`
+	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:""`
 }
 
-var cfg config
+func main() {
+	var (
+		cfg        config
+		repository *repo.Repo
+		err        error
+	)
 
-func init() {
-	err := env.Parse(&cfg)
+	err = env.Parse(&cfg)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Server address")
 	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Base URL")
-	flag.Func("f", "File storage path", func(path string) error {
-		if path != "" {
-			cfg.FileStoragePath = &path
-			return nil
-		}
-		return nil
-	})
-}
-
-func main() {
+	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "File storage path")
 	flag.Parse()
-	repository, err := repo.NewRepo(cfg.FileStoragePath)
-	if err != nil {
-		panic(err)
+
+	if cfg.FileStoragePath == "" {
+		repository = repo.NewMemoryRepo()
+	} else {
+		repository, err = repo.NewFileRepo(cfg.FileStoragePath)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 	defer repository.Close()
 	handler := handlerPkg.NewHandler(cfg.BaseURL, repository)

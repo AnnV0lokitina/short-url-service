@@ -1,12 +1,21 @@
 package handler
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	netUrl "net/url"
+	"strings"
+)
+
+const (
+	headerAcceptEncoding  = "Accept-Encoding"
+	headerContentEncoding = "Content-Encoding"
+	headerContentType     = "Content-Type"
+	encoding              = "gzip"
 )
 
 type Repo interface {
@@ -28,12 +37,41 @@ type JSONResponse struct {
 	Result string `json:"result"`
 }
 
+type gzipWriter struct {
+	http.ResponseWriter
+	Writer io.Writer
+}
+
+func (w gzipWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+func CompressMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get(headerAcceptEncoding), encoding) {
+			next.ServeHTTP(w, r)
+			return
+		}
+		gz, err := gzip.NewWriterLevel(w, gzip.BestSpeed)
+		if err != nil {
+			http.Error(w, "Gzip error", http.StatusBadRequest)
+			return
+		}
+		defer gz.Close()
+
+		w.Header().Set(headerContentEncoding, encoding)
+		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
+	})
+}
+
 func NewHandler(baseURL string, repo Repo) *Handler {
 	h := &Handler{
 		Mux:     chi.NewMux(),
 		repo:    repo,
 		baseURL: baseURL,
 	}
+
+	h.Use(CompressMiddleware)
 
 	h.Post("/", h.SetURL())
 	h.Post("/api/shorten", h.SetURLFromJSON())
@@ -80,15 +118,13 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 			Result: urlInfo.GetShortURL(h.baseURL),
 		}
 
-		response, err := json.Marshal(jsonResponse)
-		if err != nil {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.WriteHeader(http.StatusCreated)
+
+		if err := json.NewEncoder(w).Encode(&jsonResponse); err != nil {
 			http.Error(w, "Invalid request 9", http.StatusBadRequest)
 			return
 		}
-
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusCreated)
-		w.Write(response)
 	}
 }
 

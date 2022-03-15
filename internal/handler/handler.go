@@ -52,12 +52,12 @@ func CompressMiddleware(next http.Handler) http.Handler {
 		if r.Header.Get(headerContentEncoding) == encoding {
 			gzr, err := gzip.NewReader(r.Body)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, err.Error()+"_1", http.StatusInternalServerError)
 				return
 			}
 			newRequest, err = http.NewRequest(r.Method, r.URL.String(), gzr)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
+				http.Error(w, err.Error()+"_2", http.StatusInternalServerError)
 				return
 			}
 			defer gzr.Close()

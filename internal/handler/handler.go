@@ -60,7 +60,7 @@ func CompressMiddleware(next http.Handler) http.Handler {
 				http.Error(w, err.Error()+"_2", http.StatusInternalServerError)
 				return
 			}
-			defer gzr.Close()
+			// defer gzr.Close()
 		}
 		if !strings.Contains(r.Header.Get(headerAcceptEncoding), encoding) {
 			if newRequest != nil {

@@ -48,7 +48,25 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 
 func CompressMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var newRequest *http.Request
+		if r.Header.Get(headerContentEncoding) == encoding {
+			gzr, err := gzip.NewReader(r.Body)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			newRequest, err = http.NewRequest(r.Method, r.URL.String(), gzr)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer gzr.Close()
+		}
 		if !strings.Contains(r.Header.Get(headerAcceptEncoding), encoding) {
+			if newRequest != nil {
+				next.ServeHTTP(w, newRequest)
+				return
+			}
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -60,6 +78,10 @@ func CompressMiddleware(next http.Handler) http.Handler {
 		defer gz.Close()
 
 		w.Header().Set(headerContentEncoding, encoding)
+		if newRequest != nil {
+			next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, newRequest)
+			return
+		}
 		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 	})
 }

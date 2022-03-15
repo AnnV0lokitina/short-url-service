@@ -135,11 +135,11 @@ func (h *Handler) SetURL() http.HandlerFunc {
 			http.Error(w, "Invalid request 1", http.StatusBadRequest)
 			return
 		}
-		//_, err = netUrl.Parse(string(url))
-		//if err != nil {
-		//	http.Error(w, "Invalid request 2", http.StatusBadRequest)
-		//	return
-		//}
+		_, err = netUrl.Parse(string(url))
+		if err != nil {
+			http.Error(w, "Invalid request 2", http.StatusBadRequest)
+			return
+		}
 
 		urlInfo := entity.NewURLFromFullLink(string(url))
 		err = h.repo.SetURL(urlInfo)

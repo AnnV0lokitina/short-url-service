@@ -87,21 +87,21 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 				contentType:    "",
 			},
 		},
-		//{
-		//	name:        "test create url incorrect url",
-		//	setURLError: false,
-		//	request: testRequestStruct{
-		//		method: http.MethodPost,
-		//		target: "/",
-		//		body:   strings.NewReader("////%%%%%%"),
-		//	},
-		//	result: testResultStruct{
-		//		body:           "",
-		//		headerLocation: "",
-		//		code:           http.StatusBadRequest,
-		//		contentType:    "",
-		//	},
-		//},
+		{
+			name:        "test create url incorrect url",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodPost,
+				target: "/",
+				body:   strings.NewReader("////%%%%%%"),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
 		{
 			name:        "test set url error",
 			setURLError: true,
@@ -194,21 +194,21 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 				contentType:    "",
 			},
 		},
-		//{
-		//	name:        "test json-api create url incorrect url",
-		//	setURLError: false,
-		//	request: testRequestStruct{
-		//		method: http.MethodPost,
-		//		target: "/api/shorten",
-		//		body:   strings.NewReader("{\"url\":\"////%%%%%%\"}"),
-		//	},
-		//	result: testResultStruct{
-		//		body:           "",
-		//		headerLocation: "",
-		//		code:           http.StatusBadRequest,
-		//		contentType:    "",
-		//	},
-		//},
+		{
+			name:        "test json-api create url incorrect url",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodPost,
+				target: "/api/shorten",
+				body:   strings.NewReader("{\"url\":\"////%%%%%%\"}"),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
 		{
 			name:        "test json-api set url error",
 			setURLError: true,

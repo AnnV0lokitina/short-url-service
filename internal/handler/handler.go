@@ -55,12 +55,8 @@ func CompressMiddleware(next http.Handler) http.Handler {
 				http.Error(w, err.Error()+"_1", http.StatusInternalServerError)
 				return
 			}
-			newRequest, err = http.NewRequest(r.Method, r.URL.String(), gzr)
-			if err != nil {
-				http.Error(w, err.Error()+"_2", http.StatusInternalServerError)
-				return
-			}
-			// defer gzr.Close()
+			r.Body = gzr
+			defer gzr.Close()
 		}
 		if !strings.Contains(r.Header.Get(headerAcceptEncoding), encoding) {
 			if newRequest != nil {
@@ -76,12 +72,7 @@ func CompressMiddleware(next http.Handler) http.Handler {
 			return
 		}
 		defer gz.Close()
-
 		w.Header().Set(headerContentEncoding, encoding)
-		if newRequest != nil {
-			next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, newRequest)
-			return
-		}
 		next.ServeHTTP(gzipWriter{ResponseWriter: w, Writer: gz}, r)
 	})
 }

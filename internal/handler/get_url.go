@@ -28,14 +28,14 @@ func (h *Handler) GetUserURLList() http.HandlerFunc {
 			http.Error(w, "Create user error", http.StatusBadRequest)
 			return
 		}
-		list, err := h.repo.GetUserURLList(userID)
-		if err != nil {
-			http.Error(w, "User has no url", http.StatusBadRequest)
+
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		list, found := h.repo.GetUserURLList(userID)
+		if !found {
+			w.WriteHeader(http.StatusNoContent)
 			return
 		}
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusOK)
-
 		if err := json.NewEncoder(w).Encode(&list); err != nil {
 			http.Error(w, "Error while json conversion", http.StatusBadRequest)
 			return

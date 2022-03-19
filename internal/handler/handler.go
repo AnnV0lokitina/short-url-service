@@ -16,7 +16,7 @@ const (
 type Repo interface {
 	SetURL(userID uint32, url *entity.URL) error
 	GetURL(checksum string) (*entity.URL, error)
-	GetUserURLList(id uint32) ([]*entity.URL, error)
+	GetUserURLList(id uint32) ([]*entity.URL, bool)
 }
 
 type Handler struct {

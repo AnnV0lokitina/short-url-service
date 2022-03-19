@@ -89,10 +89,10 @@ func (r *Repo) GetURL(shortURL string) (*entity.URL, error) {
 	return url, nil
 }
 
-func (r *Repo) GetUserURLList(id uint32) ([]*entity.URL, error) {
+func (r *Repo) GetUserURLList(id uint32) ([]*entity.URL, bool) {
 	log, ok := r.userLog[id]
 	if !ok {
-		return nil, errors.New("no urls saved")
+		return nil, false
 	}
-	return log, nil
+	return log, true
 }

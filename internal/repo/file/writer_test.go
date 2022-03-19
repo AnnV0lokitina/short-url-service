@@ -42,12 +42,15 @@ func TestNewWriter(t *testing.T) {
 			name: "create writer",
 			args: args{
 				filePath: testDir + testWriterFileName,
-				url:      entity.NewURL("full", "checksum"),
+				url: &entity.URL{
+					Short:    "server/checksum",
+					Original: "full",
+				},
 			},
 			want: want{
 				resultType:      "*file.Writer",
 				interfaceObject: (*resultInterface)(nil),
-				url:             "{\"checksum\":\"checksum\",\"full_url\":\"full\"}\n",
+				url:             "{\"short_url\":\"server/checksum\",\"original_url\":\"full\"}\n",
 			},
 			wantCreateErr: assert.NoError,
 			wantURLErr:    assert.NoError,

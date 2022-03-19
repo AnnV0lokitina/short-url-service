@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -54,15 +55,15 @@ func createJSONEncodedResponse(t *testing.T, responseURL string) string {
 	return string(jsonEncodedResponse)
 }
 
-func getTestsDataList(t *testing.T, cfg config) []testStruct {
-	url := entity.NewURLFromFullLink("fullURL")
+func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
+	url := entity.NewURL("fullURL", ts.URL)
 	return []testStruct{
 		{
 			name:        "test create incorrect method",
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPut,
-				target: "/",
+				target: ts.URL + "/",
 				body:   nil,
 			},
 			result: testResultStruct{
@@ -77,7 +78,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/",
+				target: ts.URL + "/",
 				body:   nil,
 			},
 			result: testResultStruct{
@@ -92,7 +93,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/",
+				target: ts.URL + "/",
 				body:   strings.NewReader("////%%%%%%"),
 			},
 			result: testResultStruct{
@@ -107,7 +108,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: true,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/",
+				target: ts.URL + "/",
 				body:   strings.NewReader("fullURL"),
 			},
 			result: testResultStruct{
@@ -122,11 +123,11 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/",
+				target: ts.URL + "/",
 				body:   strings.NewReader("fullURL"),
 			},
 			result: testResultStruct{
-				body:           url.GetShortURL(cfg.BaseURL),
+				body:           url.Short,
 				headerLocation: "",
 				code:           http.StatusCreated,
 				contentType:    "text/plain; charset=UTF-8",
@@ -137,12 +138,12 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method:         http.MethodPost,
-				target:         "/",
+				target:         ts.URL + "/",
 				body:           strings.NewReader("fullURL"),
 				acceptEncoding: newStringPtr(encoding),
 			},
 			result: testResultStruct{
-				body:            url.GetShortURL(cfg.BaseURL),
+				body:            url.Short,
 				headerLocation:  "",
 				code:            http.StatusCreated,
 				contentType:     "text/plain; charset=UTF-8",
@@ -154,7 +155,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPut,
-				target: "/api/shorten",
+				target: ts.URL + "/api/shorten",
 				body:   nil,
 			},
 			result: testResultStruct{
@@ -169,7 +170,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/api/shorten",
+				target: ts.URL + "/api/shorten",
 				body:   nil,
 			},
 			result: testResultStruct{
@@ -184,7 +185,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/api/shorten",
+				target: ts.URL + "/api/shorten",
 				body:   strings.NewReader("{\"url:\"http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m\"}"),
 			},
 			result: testResultStruct{
@@ -199,7 +200,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/api/shorten",
+				target: ts.URL + "/api/shorten",
 				body:   strings.NewReader("{\"url\":\"////%%%%%%\"}"),
 			},
 			result: testResultStruct{
@@ -214,7 +215,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: true,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/api/shorten",
+				target: ts.URL + "/api/shorten",
 				body:   strings.NewReader("{\"url\":\"fullURL\"}"),
 			},
 			result: testResultStruct{
@@ -229,11 +230,11 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodPost,
-				target: "/api/shorten",
+				target: ts.URL + "/api/shorten",
 				body:   strings.NewReader("{\"url\":\"fullURL\"}"),
 			},
 			result: testResultStruct{
-				body:           createJSONEncodedResponse(t, url.GetShortURL(cfg.BaseURL)),
+				body:           createJSONEncodedResponse(t, url.Short),
 				headerLocation: "",
 				code:           http.StatusCreated,
 				contentType:    "application/json; charset=UTF-8",
@@ -244,12 +245,12 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodGet,
-				target: "/" + url.GetChecksum(),
+				target: url.Short,
 				body:   nil,
 			},
 			result: testResultStruct{
 				body:           "",
-				headerLocation: url.GetFullURL(),
+				headerLocation: url.Original,
 				code:           http.StatusTemporaryRedirect,
 				contentType:    "",
 			},
@@ -259,7 +260,7 @@ func getTestsDataList(t *testing.T, cfg config) []testStruct {
 			setURLError: false,
 			request: testRequestStruct{
 				method: http.MethodGet,
-				target: "/",
+				target: ts.URL + "/",
 				body:   nil,
 			},
 			result: testResultStruct{

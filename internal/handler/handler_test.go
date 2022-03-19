@@ -18,34 +18,45 @@ import (
 var (
 	tmpURL      *entity.URL
 	tmpURLError = false
+	tmpURLList  []*entity.URL
+	tmpUserID   uint32
 )
 
 type MockedRepo struct {
 	mock.Mock
 }
 
-func (r *MockedRepo) SetURL(url *entity.URL) error {
+func (r *MockedRepo) SetURL(userID uint32, url *entity.URL) error {
 	if tmpURLError == true {
 		return errors.New("error")
 	}
 	tmpURL = url
+	tmpURLList = []*entity.URL{tmpURL}
+	tmpUserID = userID
 	return nil
 }
 
-func (r *MockedRepo) GetURL(checksum string) (*entity.URL, error) {
-	if checksum == tmpURL.GetChecksum() {
+func (r *MockedRepo) GetURL(shortURL string) (*entity.URL, error) {
+	if shortURL == tmpURL.Short {
 		return tmpURL, nil
 	}
 	return nil, errors.New("no url saved")
 }
 
-func testRequest(t *testing.T, ts *httptest.Server, request testRequestStruct) *http.Response {
+func (r *MockedRepo) GetUserURLList(id uint32) ([]*entity.URL, error) {
+	if tmpUserID == id {
+		return tmpURLList, nil
+	}
+	return nil, errors.New("no urls")
+}
+
+func testRequest(t *testing.T, request testRequestStruct) *http.Response {
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
 	}
-	req, err := http.NewRequest(request.method, ts.URL+request.target, request.body)
+	req, err := http.NewRequest(request.method, request.target, request.body)
 	if request.acceptEncoding != nil {
 		req.Header.Set(headerAcceptEncoding, *request.acceptEncoding)
 	}
@@ -73,21 +84,21 @@ func getResponseReader(t *testing.T, resp *http.Response) io.Reader {
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
-	cfg := config{}
-	err := env.Parse(&cfg)
-	require.NoError(t, err)
-
+	//cfg := config{}
+	//err := env.Parse(&cfg)
+	//require.NoError(t, err)
 	repo := new(MockedRepo)
-	handler := NewHandler(cfg.BaseURL, repo)
-	tests := getTestsDataList(t, cfg)
-
+	handler := NewHandler("", repo)
 	ts := httptest.NewServer(handler)
+	handler.BaseURL = ts.URL
+
+	tests := getTestsDataList(t, ts)
 	defer ts.Close()
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpURLError = tt.setURLError
-			resp := testRequest(t, ts, tt.request)
+			resp := testRequest(t, tt.request)
 			assert.Equal(t, tt.result.code, resp.StatusCode)
 
 			if tt.result.contentEncoding != nil {
@@ -137,7 +148,7 @@ func TestNewHandler(t *testing.T) {
 			},
 			want: &Handler{
 				repo:    repo,
-				baseURL: cfg.BaseURL,
+				BaseURL: cfg.BaseURL,
 			},
 		},
 	}

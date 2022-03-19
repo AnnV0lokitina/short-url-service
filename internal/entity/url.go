@@ -6,32 +6,20 @@ import (
 )
 
 type URL struct {
-	checksum string
-	full     string
+	Short    string `json:"short_url"`
+	Original string `json:"original_url"`
 }
 
-func NewURL(fullURL string, checksum string) *URL {
+func NewURL(originalURL string, serverAddress string) *URL {
+	checksum := createChecksum(originalURL)
 	return &URL{
-		checksum: checksum,
-		full:     fullURL,
+		Short:    CreateShortURL(checksum, serverAddress),
+		Original: originalURL,
 	}
 }
 
-func NewURLFromFullLink(fullURL string) *URL {
-	checksum := createChecksum(fullURL)
-	return NewURL(fullURL, checksum)
-}
-
-func (u *URL) GetFullURL() string {
-	return u.full
-}
-
-func (u *URL) GetShortURL(serverAddress string) string {
-	return serverAddress + "/" + u.checksum
-}
-
-func (u *URL) GetChecksum() string {
-	return u.checksum
+func CreateShortURL(checksum string, serverAddress string) string {
+	return serverAddress + "/" + checksum
 }
 
 func createChecksum(url string) string {

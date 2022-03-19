@@ -7,8 +7,9 @@ import (
 )
 
 type Repo struct {
-	list   map[string]string
-	writer *file.Writer
+	list    map[string]string
+	userLog map[uint32][]*entity.URL
+	writer  *file.Writer
 }
 
 func createFilledList(filePath string) (*map[string]string, error) {
@@ -24,7 +25,7 @@ func createFilledList(filePath string) (*map[string]string, error) {
 		if err != nil {
 			continue
 		}
-		list[url.GetChecksum()] = url.GetFullURL()
+		list[url.Short] = url.Original
 	}
 	return &list, nil
 }
@@ -47,8 +48,9 @@ func NewFileRepo(filePath string) (*Repo, error) {
 
 func NewMemoryRepo() *Repo {
 	return &Repo{
-		list:   make(map[string]string),
-		writer: nil,
+		list:    make(map[string]string),
+		userLog: make(map[uint32][]*entity.URL),
+		writer:  nil,
 	}
 }
 
@@ -59,21 +61,37 @@ func (r *Repo) Close() error {
 	return nil
 }
 
-func (r *Repo) SetURL(url *entity.URL) error {
+func (r *Repo) SetURL(userID uint32, url *entity.URL) error {
 	if r.writer != nil {
 		if err := r.writer.WriteURL(url); err != nil {
 			return err
 		}
 	}
-	r.list[url.GetChecksum()] = url.GetFullURL()
+	_, exists := r.userLog[userID]
+	if !exists {
+		r.userLog[userID] = make([]*entity.URL, 0)
+	}
+	r.userLog[userID] = append(r.userLog[userID], url)
+	r.list[url.Short] = url.Original
 	return nil
 }
 
-func (r *Repo) GetURL(checksum string) (*entity.URL, error) {
-	fullURL, ok := r.list[checksum]
+func (r *Repo) GetURL(shortURL string) (*entity.URL, error) {
+	originalURL, ok := r.list[shortURL]
 	if !ok {
 		return nil, errors.New("no url saved")
 	}
-	url := entity.NewURL(fullURL, checksum)
+	url := &entity.URL{
+		Short:    shortURL,
+		Original: originalURL,
+	}
 	return url, nil
+}
+
+func (r *Repo) GetUserURLList(id uint32) ([]*entity.URL, error) {
+	log, ok := r.userLog[id]
+	if !ok {
+		return nil, errors.New("no urls saved")
+	}
+	return log, nil
 }

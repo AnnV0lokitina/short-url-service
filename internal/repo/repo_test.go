@@ -97,12 +97,12 @@ func TestRepo_GetURL(t *testing.T) {
 		list map[string]string
 	}
 	type args struct {
-		checksum string
+		shortURL string
 	}
 
-	url := entity.NewURLFromFullLink(urlFullString)
+	url := entity.NewURL(urlFullString, shortURLHost)
 	list := make(map[string]string)
-	list[url.GetChecksum()] = url.GetFullURL()
+	list[url.Short] = url.Original
 
 	tests := []struct {
 		name    string
@@ -117,7 +117,7 @@ func TestRepo_GetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				checksum: url.GetChecksum(),
+				shortURL: url.Short,
 			},
 			want:    url,
 			wantErr: false,
@@ -128,7 +128,7 @@ func TestRepo_GetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				checksum: "invalid checksum",
+				shortURL: "invalid url",
 			},
 			want:    url,
 			wantErr: true,
@@ -139,7 +139,7 @@ func TestRepo_GetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				checksum: "",
+				shortURL: "",
 			},
 			want:    url,
 			wantErr: true,
@@ -150,7 +150,7 @@ func TestRepo_GetURL(t *testing.T) {
 			r := &Repo{
 				list: tt.fields.list,
 			}
-			got, err := r.GetURL(tt.args.checksum)
+			got, err := r.GetURL(tt.args.shortURL)
 			if tt.wantErr == true {
 				require.Error(t, err)
 				return
@@ -163,15 +163,16 @@ func TestRepo_GetURL(t *testing.T) {
 
 func TestRepo_SetURL(t *testing.T) {
 	type fields struct {
-		list map[string]string
+		list    map[string]string
+		userLog map[uint32][]*entity.URL
 	}
 	type args struct {
 		url      *entity.URL
-		checksum string
+		shortURL string
+		userID   uint32
 	}
 
-	url := entity.NewURLFromFullLink(urlFullString)
-	list := make(map[string]string)
+	url := entity.NewURL(urlFullString, shortURLHost)
 
 	tests := []struct {
 		name    string
@@ -182,11 +183,13 @@ func TestRepo_SetURL(t *testing.T) {
 		{
 			name: "test set url positive",
 			fields: fields{
-				list: list,
+				list:    make(map[string]string),
+				userLog: make(map[uint32][]*entity.URL),
 			},
 			args: args{
 				url:      url,
-				checksum: url.GetChecksum(),
+				shortURL: url.Short,
+				userID:   11,
 			},
 			wantErr: false,
 		},
@@ -194,12 +197,13 @@ func TestRepo_SetURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Repo{
-				list: tt.fields.list,
+				list:    tt.fields.list,
+				userLog: tt.fields.userLog,
 			}
-			err := r.SetURL(tt.args.url)
+			err := r.SetURL(tt.args.userID, tt.args.url)
 			require.NoError(t, err)
 
-			receiveURL, err := r.GetURL(tt.args.checksum)
+			receiveURL, err := r.GetURL(tt.args.shortURL)
 
 			if tt.wantErr == true {
 				require.Error(t, err)
@@ -207,9 +211,11 @@ func TestRepo_SetURL(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.args.url.GetShortURL(shortURLHost), receiveURL.GetShortURL(shortURLHost))
-			assert.Equal(t, tt.args.url.GetFullURL(), receiveURL.GetFullURL())
-			assert.Equal(t, tt.args.url.GetChecksum(), receiveURL.GetChecksum())
+			assert.Equal(t, tt.args.url.Short, receiveURL.Short)
+			assert.Equal(t, tt.args.url.Original, receiveURL.Original)
+
+			assert.Equal(t, len(r.userLog[tt.args.userID]), 1)
+			assert.ObjectsAreEqual(tt.args.url, r.userLog[tt.args.userID][0])
 		})
 	}
 }

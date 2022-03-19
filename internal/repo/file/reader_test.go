@@ -43,12 +43,15 @@ func TestNewReader(t *testing.T) {
 			name: "new reader positive",
 			args: args{
 				filePath:    testDir + testReaderFileName,
-				fileContent: "{\"checksum\":\"checksum\",\"full_url\":\"full\"}\n",
+				fileContent: "{\"short_url\":\"server/checksum\",\"original_url\":\"full\"}\n",
 			},
 			want: want{
 				resultType:      "*file.Reader",
 				interfaceObject: (*resultInterface)(nil),
-				url:             entity.NewURL("full", "checksum"),
+				url: &entity.URL{
+					Short:    "server/checksum",
+					Original: "full",
+				},
 			},
 			wantCreateErr: assert.NoError,
 			wantURLErr:    assert.NoError,

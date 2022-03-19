@@ -43,11 +43,11 @@ func (r *MockedRepo) GetURL(shortURL string) (*entity.URL, error) {
 	return nil, errors.New("no url saved")
 }
 
-func (r *MockedRepo) GetUserURLList(id uint32) ([]*entity.URL, error) {
+func (r *MockedRepo) GetUserURLList(id uint32) ([]*entity.URL, bool) {
 	if tmpUserID == id {
-		return tmpURLList, nil
+		return tmpURLList, true
 	}
-	return nil, errors.New("no urls")
+	return nil, false
 }
 
 func testRequest(t *testing.T, request testRequestStruct) *http.Response {

@@ -41,8 +41,9 @@ func NewFileRepo(filePath string) (*Repo, error) {
 	}
 
 	return &Repo{
-		list:   *list,
-		writer: writer,
+		list:    *list,
+		userLog: make(map[uint32][]*entity.URL),
+		writer:  writer,
 	}, nil
 }
 

@@ -20,7 +20,7 @@ type MockedRepo struct {
 }
 
 func (r *MockedRepo) SetURL(userID uint32, url *entity.URL) error {
-	if tmpURLError == true {
+	if tmpURLError {
 		return errors.New("error")
 	}
 	tmpURL = url
@@ -52,8 +52,5 @@ func (r *MockedRepo) GetUserURLList(id uint32) ([]*entity.URL, bool) {
 }
 
 func (r *MockedRepo) PingBD(ctx context.Context) bool {
-	if !pingDB {
-		return false
-	}
-	return true
+	return pingDB
 }

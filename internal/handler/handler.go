@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -17,6 +18,7 @@ type Repo interface {
 	SetURL(userID uint32, url *entity.URL) error
 	GetURL(checksum string) (*entity.URL, error)
 	GetUserURLList(id uint32) ([]*entity.URL, bool)
+	PingBD(ctx context.Context) bool
 }
 
 type Handler struct {
@@ -38,6 +40,7 @@ func NewHandler(baseURL string, repo Repo) *Handler {
 	h.Post("/api/shorten", h.SetURLFromJSON())
 	h.Get("/{id}", h.GetURL())
 	h.Get("/api/user/urls", h.GetUserURLList())
+	h.Get("/ping", h.PingDB())
 	h.MethodNotAllowed(h.ExecIfNotAllowed())
 
 	return h

@@ -1,12 +1,14 @@
 package repo
 
 import (
+	"context"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"os"
-	"testing"
-
+	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"os"
+	"testing"
+	"time"
 )
 
 const (
@@ -16,32 +18,51 @@ const (
 )
 
 func TestNewMemoryRepo(t *testing.T) {
-	list := make(map[string]string)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	conn, err := pgxmock.NewConn()
+	require.NoError(t, err)
+	defer conn.Close(ctx)
+
+	type args struct {
+		conn PgxIface
+	}
 
 	tests := []struct {
 		name string
+		args args
 		want *Repo
 	}{
 		{
 			name: "test new repo positive",
+			args: args{
+				conn: conn,
+			},
 			want: &Repo{
-				list:   list,
+				list:   make(map[string]string),
 				writer: nil,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewMemoryRepo()
+			got := NewMemoryRepo(tt.args.conn)
 			assert.ObjectsAreEqual(got, tt.want)
 		})
 	}
 }
 
 func TestNewFileRepo(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+	conn, err := pgxmock.NewConn()
+	require.NoError(t, err)
+	defer conn.Close(ctx)
+
 	type args struct {
 		filePath    string
 		fileContent string
+		conn        PgxIface
 	}
 
 	type want struct {
@@ -63,6 +84,7 @@ func TestNewFileRepo(t *testing.T) {
 			args: &args{
 				filePath:    testDir + testReaderFileName,
 				fileContent: "{\"checksum\":\"checksum\",\"full_url\":\"full\"}\n",
+				conn:        conn,
 			},
 			want: want{
 				repo: &Repo{
@@ -81,7 +103,7 @@ func TestNewFileRepo(t *testing.T) {
 			err = file.Close()
 			require.NoError(t, err)
 
-			got, err := NewFileRepo(tt.args.filePath)
+			got, err := NewFileRepo(tt.args.filePath, tt.args.conn)
 			require.NoError(t, err)
 			assert.ObjectsAreEqual(got, tt.want)
 			assert.Equal(t, len(got.list), 1, "NewRepo(nil)")
@@ -216,6 +238,96 @@ func TestRepo_SetURL(t *testing.T) {
 
 			assert.Equal(t, len(r.userLog[tt.args.userID]), 1)
 			assert.ObjectsAreEqual(tt.args.url, r.userLog[tt.args.userID][0])
+		})
+	}
+}
+
+func TestRepo_GetUserURLList(t *testing.T) {
+	type input struct {
+		userLog map[uint32][]*entity.URL
+		userID  uint32
+	}
+	userLog := make(map[uint32][]*entity.URL)
+	userLog[1234] = []*entity.URL{
+		&entity.URL{
+			Short:    "short",
+			Original: "original",
+		},
+	}
+	tests := []struct {
+		name  string
+		input input
+		want  []*entity.URL
+		want1 bool
+	}{
+		{
+			name: "test get urls",
+			input: input{
+				userLog: userLog,
+				userID:  1234,
+			},
+			want: []*entity.URL{
+				&entity.URL{
+					Short:    "short",
+					Original: "original",
+				},
+			},
+			want1: true,
+		},
+		{
+			name: "test get urls",
+			input: input{
+				userLog: userLog,
+				userID:  12345,
+			},
+			want:  nil,
+			want1: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Repo{
+				userLog: tt.input.userLog,
+			}
+			got, got1 := r.GetUserURLList(tt.input.userID)
+			assert.Equalf(t, tt.want, got, "GetUserURLList(%v)", tt.input.userID)
+			assert.Equalf(t, tt.want1, got1, "GetUserURLList(%v)", tt.input.userID)
+		})
+	}
+}
+
+func TestRepo_PingBD(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	conn, err := pgxmock.NewConn()
+	require.NoError(t, err)
+	defer conn.Close(ctx)
+
+	type input struct {
+		conn PgxIface
+		ctx  context.Context
+	}
+	tests := []struct {
+		name  string
+		input input
+		want  bool
+	}{
+		{
+			name: "ping positive",
+			input: input{
+				ctx:  ctx,
+				conn: conn,
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Repo{
+				conn: tt.input.conn,
+			}
+			assert.Equalf(t, tt.want, r.PingBD(tt.input.ctx), "PingBD(%v)", tt.input.ctx)
 		})
 	}
 }

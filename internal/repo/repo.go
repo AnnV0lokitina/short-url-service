@@ -1,15 +1,24 @@
 package repo
 
 import (
+	"context"
 	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo/file"
+	"time"
 )
+
+var dbPingTimeout = 1 * time.Second
+
+type PgxIface interface {
+	Ping(ctx context.Context) error
+}
 
 type Repo struct {
 	list    map[string]string
 	userLog map[uint32][]*entity.URL
 	writer  *file.Writer
+	conn    PgxIface
 }
 
 func createFilledList(filePath string) (*map[string]string, error) {
@@ -30,7 +39,7 @@ func createFilledList(filePath string) (*map[string]string, error) {
 	return &list, nil
 }
 
-func NewFileRepo(filePath string) (*Repo, error) {
+func NewFileRepo(filePath string, conn PgxIface) (*Repo, error) {
 	list, err := createFilledList(filePath)
 	if err != nil {
 		return nil, err
@@ -44,15 +53,24 @@ func NewFileRepo(filePath string) (*Repo, error) {
 		list:    *list,
 		userLog: make(map[uint32][]*entity.URL),
 		writer:  writer,
+		conn:    conn,
 	}, nil
 }
 
-func NewMemoryRepo() *Repo {
+func NewMemoryRepo(conn PgxIface) *Repo {
 	return &Repo{
 		list:    make(map[string]string),
 		userLog: make(map[uint32][]*entity.URL),
 		writer:  nil,
+		conn:    conn,
 	}
+}
+
+func (r *Repo) PingBD(ctx context.Context) bool {
+	if err := r.conn.Ping(ctx); err != nil {
+		return false
+	}
+	return true
 }
 
 func (r *Repo) Close() error {

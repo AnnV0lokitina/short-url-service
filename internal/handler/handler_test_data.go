@@ -16,6 +16,8 @@ type testRequestStruct struct {
 	target         string
 	body           io.Reader
 	acceptEncoding *string
+	cookie         *http.Cookie
+	dbEnabled      *bool
 }
 
 type testResultStruct struct {
@@ -39,6 +41,10 @@ type config struct {
 }
 
 func newStringPtr(x string) *string {
+	return &x
+}
+
+func newBoolPtr(x bool) *bool {
 	return &x
 }
 
@@ -267,6 +273,79 @@ func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 				body:           "",
 				headerLocation: "",
 				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "test get user url nagative",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodGet,
+				target: ts.URL + "/api/user/urls",
+				body:   nil,
+				cookie: &http.Cookie{
+					Name:     "login",
+					Value:    generateLogin(4444),
+					HttpOnly: false,
+				},
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusNoContent,
+				contentType:    "application/json; charset=UTF-8",
+			},
+		},
+		{
+			name:        "test get user url positive",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodGet,
+				target: ts.URL + "/api/user/urls",
+				body:   nil,
+				cookie: &http.Cookie{
+					Name:     "login",
+					Value:    generateLogin(1234),
+					HttpOnly: false,
+				},
+				acceptEncoding: nil,
+			},
+			result: testResultStruct{
+				body:           "[{\"short_url\":\"short\",\"original_url\":\"original\"}]\n",
+				headerLocation: "",
+				code:           http.StatusOK,
+				contentType:    "application/json; charset=UTF-8",
+			},
+		},
+		{
+			name:        "test ping nagative",
+			setURLError: false,
+			request: testRequestStruct{
+				method:    http.MethodGet,
+				target:    ts.URL + "/ping",
+				body:      nil,
+				dbEnabled: newBoolPtr(false),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusInternalServerError,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "test ping positive",
+			setURLError: false,
+			request: testRequestStruct{
+				method:    http.MethodGet,
+				target:    ts.URL + "/ping",
+				body:      nil,
+				dbEnabled: newBoolPtr(true),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusOK,
 				contentType:    "",
 			},
 		},

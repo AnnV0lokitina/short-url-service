@@ -2,11 +2,8 @@ package handler
 
 import (
 	"compress/gzip"
-	"errors"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/caarlos0/env/v6"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"io"
 	"io/ioutil"
@@ -14,41 +11,6 @@ import (
 	"net/http/httptest"
 	"testing"
 )
-
-var (
-	tmpURL      *entity.URL
-	tmpURLError = false
-	tmpURLList  []*entity.URL
-	tmpUserID   uint32
-)
-
-type MockedRepo struct {
-	mock.Mock
-}
-
-func (r *MockedRepo) SetURL(userID uint32, url *entity.URL) error {
-	if tmpURLError == true {
-		return errors.New("error")
-	}
-	tmpURL = url
-	tmpURLList = []*entity.URL{tmpURL}
-	tmpUserID = userID
-	return nil
-}
-
-func (r *MockedRepo) GetURL(shortURL string) (*entity.URL, error) {
-	if shortURL == tmpURL.Short {
-		return tmpURL, nil
-	}
-	return nil, errors.New("no url saved")
-}
-
-func (r *MockedRepo) GetUserURLList(id uint32) ([]*entity.URL, bool) {
-	if tmpUserID == id {
-		return tmpURLList, true
-	}
-	return nil, false
-}
 
 func testRequest(t *testing.T, request testRequestStruct) *http.Response {
 	client := &http.Client{
@@ -60,12 +22,17 @@ func testRequest(t *testing.T, request testRequestStruct) *http.Response {
 	if request.acceptEncoding != nil {
 		req.Header.Set(headerAcceptEncoding, *request.acceptEncoding)
 	}
+	if request.cookie != nil {
+		req.AddCookie(request.cookie)
+	}
 
 	require.NoError(t, err)
 
 	resp, err := client.Do(req)
 	require.NoError(t, err)
-
+	if request.acceptEncoding == nil {
+		resp.Header.Del(`Content-Encoding`)
+	}
 	return resp
 }
 
@@ -84,9 +51,6 @@ func getResponseReader(t *testing.T, resp *http.Response) io.Reader {
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
-	//cfg := config{}
-	//err := env.Parse(&cfg)
-	//require.NoError(t, err)
 	repo := new(MockedRepo)
 	handler := NewHandler("", repo)
 	ts := httptest.NewServer(handler)
@@ -98,6 +62,11 @@ func TestHandler_ServeHTTP(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpURLError = tt.setURLError
+
+			if tt.request.dbEnabled != nil {
+				pingDB = *tt.request.dbEnabled
+			}
+
 			resp := testRequest(t, tt.request)
 			assert.Equal(t, tt.result.code, resp.StatusCode)
 

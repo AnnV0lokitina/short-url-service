@@ -15,10 +15,11 @@ const (
 )
 
 type Repo interface {
-	SetURL(userID uint32, url *entity.URL) error
-	GetURL(checksum string) (*entity.URL, error)
-	GetUserURLList(id uint32) ([]*entity.URL, bool)
+	SetURL(ctx context.Context, userID uint32, url *entity.URL) error
+	GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, error)
+	GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error)
 	PingBD(ctx context.Context) bool
+	Close(context.Context) error
 }
 
 type Handler struct {

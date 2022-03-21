@@ -2,23 +2,14 @@ package repo
 
 import (
 	"context"
-	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo/file"
-	"time"
 )
-
-var dbPingTimeout = 1 * time.Second
-
-type PgxIface interface {
-	Ping(ctx context.Context) error
-}
 
 type Repo struct {
 	list    map[string]string
 	userLog map[uint32][]*entity.URL
 	writer  *file.Writer
-	conn    PgxIface
 }
 
 func createFilledList(filePath string) (*map[string]string, error) {
@@ -39,7 +30,7 @@ func createFilledList(filePath string) (*map[string]string, error) {
 	return &list, nil
 }
 
-func NewFileRepo(filePath string, conn PgxIface) (*Repo, error) {
+func NewFileRepo(filePath string) (*Repo, error) {
 	list, err := createFilledList(filePath)
 	if err != nil {
 		return nil, err
@@ -53,34 +44,29 @@ func NewFileRepo(filePath string, conn PgxIface) (*Repo, error) {
 		list:    *list,
 		userLog: make(map[uint32][]*entity.URL),
 		writer:  writer,
-		conn:    conn,
 	}, nil
 }
 
-func NewMemoryRepo(conn PgxIface) *Repo {
+func NewMemoryRepo() *Repo {
 	return &Repo{
 		list:    make(map[string]string),
 		userLog: make(map[uint32][]*entity.URL),
 		writer:  nil,
-		conn:    conn,
 	}
 }
 
-func (r *Repo) PingBD(ctx context.Context) bool {
-	if err := r.conn.Ping(ctx); err != nil {
-		return false
-	}
-	return true
+func (r *Repo) PingBD(_ context.Context) bool {
+	return false
 }
 
-func (r *Repo) Close() error {
+func (r *Repo) Close(_ context.Context) error {
 	if r.writer != nil {
 		return r.writer.Close()
 	}
 	return nil
 }
 
-func (r *Repo) SetURL(userID uint32, url *entity.URL) error {
+func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
 	if r.writer != nil {
 		if err := r.writer.WriteURL(url); err != nil {
 			return err
@@ -95,22 +81,22 @@ func (r *Repo) SetURL(userID uint32, url *entity.URL) error {
 	return nil
 }
 
-func (r *Repo) GetURL(shortURL string) (*entity.URL, error) {
+func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, bool, error) {
 	originalURL, ok := r.list[shortURL]
 	if !ok {
-		return nil, errors.New("no url saved")
+		return nil, false, nil
 	}
 	url := &entity.URL{
 		Short:    shortURL,
 		Original: originalURL,
 	}
-	return url, nil
+	return url, true, nil
 }
 
-func (r *Repo) GetUserURLList(id uint32) ([]*entity.URL, bool) {
+func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, bool, error) {
 	log, ok := r.userLog[id]
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
-	return log, true
+	return log, true, nil
 }

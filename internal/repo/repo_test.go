@@ -24,20 +24,12 @@ func TestNewMemoryRepo(t *testing.T) {
 	require.NoError(t, err)
 	defer conn.Close(ctx)
 
-	type args struct {
-		conn PgxIface
-	}
-
 	tests := []struct {
 		name string
-		args args
 		want *Repo
 	}{
 		{
 			name: "test new repo positive",
-			args: args{
-				conn: conn,
-			},
 			want: &Repo{
 				list:   make(map[string]string),
 				writer: nil,
@@ -46,7 +38,7 @@ func TestNewMemoryRepo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewMemoryRepo(tt.args.conn)
+			got := NewMemoryRepo()
 			assert.ObjectsAreEqual(got, tt.want)
 		})
 	}
@@ -62,7 +54,6 @@ func TestNewFileRepo(t *testing.T) {
 	type args struct {
 		filePath    string
 		fileContent string
-		conn        PgxIface
 	}
 
 	type want struct {
@@ -84,7 +75,6 @@ func TestNewFileRepo(t *testing.T) {
 			args: &args{
 				filePath:    testDir + testReaderFileName,
 				fileContent: "{\"checksum\":\"checksum\",\"full_url\":\"full\"}\n",
-				conn:        conn,
 			},
 			want: want{
 				repo: &Repo{
@@ -103,7 +93,7 @@ func TestNewFileRepo(t *testing.T) {
 			err = file.Close()
 			require.NoError(t, err)
 
-			got, err := NewFileRepo(tt.args.filePath, tt.args.conn)
+			got, err := NewFileRepo(tt.args.filePath)
 			require.NoError(t, err)
 			assert.ObjectsAreEqual(got, tt.want)
 			assert.Equal(t, len(got.list), 1, "NewRepo(nil)")
@@ -127,11 +117,11 @@ func TestRepo_GetURL(t *testing.T) {
 	list[url.Short] = url.Original
 
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *entity.URL
-		wantErr bool
+		name   string
+		fields fields
+		args   args
+		want   *entity.URL
+		found  bool
 	}{
 		{
 			name: "test repo get url",
@@ -141,8 +131,8 @@ func TestRepo_GetURL(t *testing.T) {
 			args: args{
 				shortURL: url.Short,
 			},
-			want:    url,
-			wantErr: false,
+			want:  url,
+			found: true,
 		},
 		{
 			name: "test repo get url error",
@@ -152,8 +142,8 @@ func TestRepo_GetURL(t *testing.T) {
 			args: args{
 				shortURL: "invalid url",
 			},
-			want:    url,
-			wantErr: true,
+			want:  url,
+			found: false,
 		},
 		{
 			name: "test repo get url error (empty uuid)",
@@ -163,8 +153,8 @@ func TestRepo_GetURL(t *testing.T) {
 			args: args{
 				shortURL: "",
 			},
-			want:    url,
-			wantErr: true,
+			want:  url,
+			found: false,
 		},
 	}
 	for _, tt := range tests {
@@ -172,12 +162,8 @@ func TestRepo_GetURL(t *testing.T) {
 			r := &Repo{
 				list: tt.fields.list,
 			}
-			got, err := r.GetURL(tt.args.shortURL)
-			if tt.wantErr == true {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
+			got, found, _ := r.GetURL(nil, tt.args.shortURL)
+			assert.Equal(t, tt.found, found)
 			assert.ObjectsAreEqual(got, tt.want)
 		})
 	}
@@ -197,10 +183,10 @@ func TestRepo_SetURL(t *testing.T) {
 	url := entity.NewURL(urlFullString, shortURLHost)
 
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
+		name   string
+		fields fields
+		args   args
+		found  bool
 	}{
 		{
 			name: "test set url positive",
@@ -213,7 +199,7 @@ func TestRepo_SetURL(t *testing.T) {
 				shortURL: url.Short,
 				userID:   11,
 			},
-			wantErr: false,
+			found: true,
 		},
 	}
 	for _, tt := range tests {
@@ -222,17 +208,12 @@ func TestRepo_SetURL(t *testing.T) {
 				list:    tt.fields.list,
 				userLog: tt.fields.userLog,
 			}
-			err := r.SetURL(tt.args.userID, tt.args.url)
+			err := r.SetURL(nil, tt.args.userID, tt.args.url)
 			require.NoError(t, err)
 
-			receiveURL, err := r.GetURL(tt.args.shortURL)
+			receiveURL, found, _ := r.GetURL(nil, tt.args.shortURL)
 
-			if tt.wantErr == true {
-				require.Error(t, err)
-				return
-			}
-			require.NoError(t, err)
-
+			assert.Equal(t, tt.found, found)
 			assert.Equal(t, tt.args.url.Short, receiveURL.Short)
 			assert.Equal(t, tt.args.url.Original, receiveURL.Original)
 
@@ -289,45 +270,9 @@ func TestRepo_GetUserURLList(t *testing.T) {
 			r := &Repo{
 				userLog: tt.input.userLog,
 			}
-			got, got1 := r.GetUserURLList(tt.input.userID)
+			got, got1, _ := r.GetUserURLList(nil, tt.input.userID)
 			assert.Equalf(t, tt.want, got, "GetUserURLList(%v)", tt.input.userID)
 			assert.Equalf(t, tt.want1, got1, "GetUserURLList(%v)", tt.input.userID)
-		})
-	}
-}
-
-func TestRepo_PingBD(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
-	conn, err := pgxmock.NewConn()
-	require.NoError(t, err)
-	defer conn.Close(ctx)
-
-	type input struct {
-		conn PgxIface
-		ctx  context.Context
-	}
-	tests := []struct {
-		name  string
-		input input
-		want  bool
-	}{
-		{
-			name: "ping positive",
-			input: input{
-				ctx:  ctx,
-				conn: conn,
-			},
-			want: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &Repo{
-				conn: tt.input.conn,
-			}
-			assert.Equalf(t, tt.want, r.PingBD(tt.input.ctx), "PingBD(%v)", tt.input.ctx)
 		})
 	}
 }

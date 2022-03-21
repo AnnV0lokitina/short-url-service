@@ -2,56 +2,39 @@ package main
 
 import (
 	"context"
-	"flag"
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/caarlos0/env/v6"
-	"github.com/jackc/pgx/v4"
+	"github.com/AnnV0lokitina/short-url-service.git/internal/sql_repo"
 	"log"
 )
 
-type config struct {
-	ServerAddress   string `env:"SERVER_ADDRESS"  envDefault:"localhost:8080"`
-	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:""`
-	BataBaseDSN     string `env:"DATABASE_DSN" envDefault:""`
+func main() {
+	cfg := initConfig()
+	initParams(cfg)
+
+	ctx := context.Background()
+	repo := initRepo(ctx, cfg)
+	defer repo.Close(ctx)
+
+	handler := handlerPkg.NewHandler(cfg.BaseURL, repo)
+	application := NewApp(handler)
+	application.Run(cfg.ServerAddress)
 }
 
-func main() {
-	var (
-		cfg        config
-		repository *repo.Repo
-		err        error
-	)
-
-	err = env.Parse(&cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	flag.StringVar(&cfg.ServerAddress, "a", cfg.ServerAddress, "Server address")
-	flag.StringVar(&cfg.BaseURL, "b", cfg.BaseURL, "Base URL")
-	flag.StringVar(&cfg.FileStoragePath, "f", cfg.FileStoragePath, "File storage path")
-	flag.StringVar(&cfg.BataBaseDSN, "d", cfg.BataBaseDSN, "DB connect string")
-	flag.Parse()
-
-	context := context.Background()
-	conn, err := pgx.Connect(context, cfg.BataBaseDSN)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close(context)
-
-	if cfg.FileStoragePath == "" {
-		repository = repo.NewMemoryRepo(conn)
-	} else {
-		repository, err = repo.NewFileRepo(cfg.FileStoragePath, conn)
+func initRepo(ctx context.Context, cfg config) handlerPkg.Repo {
+	if cfg.BataBaseDSN != "" {
+		repository, err := sql_repo.NewSQLRepo(ctx, cfg.BataBaseDSN)
 		if err != nil {
 			log.Fatal(err)
 		}
+		return repository
 	}
-	defer repository.Close()
-	handler := handlerPkg.NewHandler(cfg.BaseURL, repository)
-	application := NewApp(handler)
-	application.Run(cfg.ServerAddress)
+	if cfg.FileStoragePath == "" {
+		return repo.NewMemoryRepo()
+	}
+	repository, err := repo.NewFileRepo(cfg.FileStoragePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return repository
 }

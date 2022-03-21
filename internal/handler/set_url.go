@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"io"
 	"net/http"
@@ -18,6 +20,7 @@ type JSONResponse struct {
 
 func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
 		userID, err := authorization(w, r)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
@@ -42,7 +45,7 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 		}
 
 		url := entity.NewURL(parsedRequest.URL, h.BaseURL)
-		err = h.repo.SetURL(userID, url)
+		err = h.repo.SetURL(ctx, userID, url)
 		if err != nil {
 			http.Error(w, "Invalid request 10", http.StatusBadRequest)
 			return
@@ -64,6 +67,7 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 
 func (h *Handler) SetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
 		userID, err := authorization(w, r)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
@@ -81,7 +85,8 @@ func (h *Handler) SetURL() http.HandlerFunc {
 		}
 
 		urlPair := entity.NewURL(string(url), h.BaseURL)
-		err = h.repo.SetURL(userID, urlPair)
+		err = h.repo.SetURL(ctx, userID, urlPair)
+		fmt.Println(err)
 		if err != nil {
 			http.Error(w, "Invalid request 10", http.StatusBadRequest)
 			return

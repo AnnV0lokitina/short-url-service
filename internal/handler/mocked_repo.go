@@ -19,7 +19,7 @@ type MockedRepo struct {
 	mock.Mock
 }
 
-func (r *MockedRepo) SetURL(userID uint32, url *entity.URL) error {
+func (r *MockedRepo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error {
 	if tmpURLError {
 		return errors.New("error")
 	}
@@ -29,16 +29,16 @@ func (r *MockedRepo) SetURL(userID uint32, url *entity.URL) error {
 	return nil
 }
 
-func (r *MockedRepo) GetURL(shortURL string) (*entity.URL, error) {
+func (r *MockedRepo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, error) {
 	if shortURL == tmpURL.Short {
-		return tmpURL, nil
+		return tmpURL, true, nil
 	}
-	return nil, errors.New("no url saved")
+	return nil, false, errors.New("no url saved")
 }
 
-func (r *MockedRepo) GetUserURLList(id uint32) ([]*entity.URL, bool) {
+func (r *MockedRepo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error) {
 	if tmpUserID == id {
-		return tmpURLList, true
+		return tmpURLList, true, nil
 	}
 	if id == 1234 {
 		return []*entity.URL{
@@ -46,9 +46,13 @@ func (r *MockedRepo) GetUserURLList(id uint32) ([]*entity.URL, bool) {
 				Short:    "short",
 				Original: "original",
 			},
-		}, true
+		}, true, nil
 	}
-	return nil, false
+	return nil, false, nil
+}
+
+func (r *MockedRepo) Close(_ context.Context) error {
+	return nil
 }
 
 func (r *MockedRepo) PingBD(ctx context.Context) bool {

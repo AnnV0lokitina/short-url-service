@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/go-chi/chi/v5"
@@ -9,10 +10,11 @@ import (
 
 func (h *Handler) GetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
 		checksum := chi.URLParam(r, "id")
 		shortURL := entity.CreateShortURL(checksum, h.BaseURL)
-		url, err := h.repo.GetURL(shortURL)
-		if err != nil {
+		url, found, err := h.repo.GetURL(ctx, shortURL)
+		if !found || err != nil {
 			http.Error(w, "Invalid request 4", http.StatusBadRequest)
 			return
 		}
@@ -23,6 +25,7 @@ func (h *Handler) GetURL() http.HandlerFunc {
 
 func (h *Handler) GetUserURLList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
 		userID, err := authorization(w, r)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
@@ -30,8 +33,8 @@ func (h *Handler) GetUserURLList() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		list, found := h.repo.GetUserURLList(userID)
-		if !found {
+		list, found, err := h.repo.GetUserURLList(ctx, userID)
+		if !found || err != nil {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

@@ -4,7 +4,7 @@ import (
 	"context"
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/sql_repo"
+	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
 	"log"
 )
 
@@ -23,7 +23,7 @@ func main() {
 
 func initRepo(ctx context.Context, cfg config) handlerPkg.Repo {
 	if cfg.BataBaseDSN != "" {
-		repository, err := sql_repo.NewSQLRepo(ctx, cfg.BataBaseDSN)
+		repository, err := sqlrepo.NewSQLRepo(ctx, cfg.BataBaseDSN)
 		if err != nil {
 			log.Fatal(err)
 		}

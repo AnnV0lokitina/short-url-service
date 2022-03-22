@@ -63,7 +63,7 @@ func createJSONEncodedResponse(t *testing.T, responseURL string) string {
 
 func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 	url := entity.NewURL("fullURL", ts.URL)
-	conflictUrl := entity.NewURL("conflict", ts.URL)
+	conflictURL := entity.NewURL("conflict", ts.URL)
 	return []testStruct{
 		{
 			name:        "test create incorrect method",
@@ -359,7 +359,7 @@ func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 				body:   strings.NewReader("{\"url\":\"conflict\"}"),
 			},
 			result: testResultStruct{
-				body:           createJSONEncodedResponse(t, conflictUrl.Short),
+				body:           createJSONEncodedResponse(t, conflictURL.Short),
 				headerLocation: "",
 				code:           http.StatusConflict,
 				contentType:    "application/json; charset=UTF-8",
@@ -374,7 +374,7 @@ func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 				body:   strings.NewReader("conflict"),
 			},
 			result: testResultStruct{
-				body:           conflictUrl.Short,
+				body:           conflictURL.Short,
 				headerLocation: "",
 				code:           http.StatusConflict,
 				contentType:    "text/plain; charset=UTF-8",

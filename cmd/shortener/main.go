@@ -21,20 +21,20 @@ func main() {
 	application.Run(cfg.ServerAddress)
 }
 
-func initRepo(ctx context.Context, cfg config) handlerPkg.Repo {
-	if cfg.BataBaseDSN != "" {
-		repository, err := sqlrepo.NewSQLRepo(ctx, cfg.BataBaseDSN)
+func initRepo(ctx context.Context, cfg *config) handlerPkg.Repo {
+	if cfg.DataBaseDSN != "" {
+		repository, err := sqlrepo.NewSQLRepo(ctx, cfg.DataBaseDSN)
 		if err != nil {
 			log.Fatal(err)
 		}
 		return repository
 	}
-	if cfg.FileStoragePath == "" {
-		return repo.NewMemoryRepo()
+	if cfg.FileStoragePath != "" {
+		repository, err := repo.NewFileRepo(cfg.FileStoragePath)
+		if err != nil {
+			log.Fatal(err)
+		}
+		return repository
 	}
-	repository, err := repo.NewFileRepo(cfg.FileStoragePath)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return repository
+	return repo.NewMemoryRepo()
 }

@@ -162,7 +162,7 @@ func TestRepo_GetURL(t *testing.T) {
 			r := &Repo{
 				list: tt.fields.list,
 			}
-			got, found, _ := r.GetURL(nil, tt.args.shortURL)
+			got, found, _ := r.GetURL(context.TODO(), tt.args.shortURL)
 			assert.Equal(t, tt.found, found)
 			assert.ObjectsAreEqual(got, tt.want)
 		})
@@ -208,10 +208,10 @@ func TestRepo_SetURL(t *testing.T) {
 				list:    tt.fields.list,
 				userLog: tt.fields.userLog,
 			}
-			err := r.SetURL(nil, tt.args.userID, tt.args.url)
+			err := r.SetURL(context.TODO(), tt.args.userID, tt.args.url)
 			require.NoError(t, err)
 
-			receiveURL, found, _ := r.GetURL(nil, tt.args.shortURL)
+			receiveURL, found, _ := r.GetURL(context.TODO(), tt.args.shortURL)
 
 			assert.Equal(t, tt.found, found)
 			assert.Equal(t, tt.args.url.Short, receiveURL.Short)
@@ -270,7 +270,7 @@ func TestRepo_GetUserURLList(t *testing.T) {
 			r := &Repo{
 				userLog: tt.input.userLog,
 			}
-			got, got1, _ := r.GetUserURLList(nil, tt.input.userID)
+			got, got1, _ := r.GetUserURLList(context.TODO(), tt.input.userID)
 			assert.Equalf(t, tt.want, got, "GetUserURLList(%v)", tt.input.userID)
 			assert.Equalf(t, tt.want1, got1, "GetUserURLList(%v)", tt.input.userID)
 		})

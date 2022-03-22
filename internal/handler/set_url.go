@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"io"
 	"net/http"
@@ -86,7 +85,6 @@ func (h *Handler) SetURL() http.HandlerFunc {
 
 		urlPair := entity.NewURL(string(url), h.BaseURL)
 		err = h.repo.SetURL(ctx, userID, urlPair)
-		fmt.Println(err)
 		if err != nil {
 			http.Error(w, "Invalid request 10", http.StatusBadRequest)
 			return

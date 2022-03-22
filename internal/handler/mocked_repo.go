@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -26,6 +27,9 @@ func (r *MockedRepo) SetURL(ctx context.Context, userID uint32, url *entity.URL)
 	tmpURL = url
 	tmpURLList = []*entity.URL{tmpURL}
 	tmpUserID = userID
+	if url.Original == "conflict" {
+		return labelError.NewLabelError("CONFLICT", errors.New("URL exists"))
+	}
 	return nil
 }
 

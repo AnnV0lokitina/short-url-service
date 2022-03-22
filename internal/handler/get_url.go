@@ -14,7 +14,7 @@ func (h *Handler) GetURL() http.HandlerFunc {
 		checksum := chi.URLParam(r, "id")
 		shortURL := entity.CreateShortURL(checksum, h.BaseURL)
 		url, found, err := h.repo.GetURL(ctx, shortURL)
-		if !found || err != nil {
+		if err != nil || !found {
 			http.Error(w, "Invalid request 4", http.StatusBadRequest)
 			return
 		}
@@ -34,7 +34,7 @@ func (h *Handler) GetUserURLList() http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		list, found, err := h.repo.GetUserURLList(ctx, userID)
-		if !found || err != nil {
+		if err != nil || !found {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

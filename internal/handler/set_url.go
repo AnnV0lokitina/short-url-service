@@ -3,7 +3,9 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"io"
 	"net/http"
 	netUrl "net/url"
@@ -46,17 +48,21 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 		url := entity.NewURL(parsedRequest.URL, h.BaseURL)
 		err = h.repo.SetURL(ctx, userID, url)
 		if err != nil {
-			http.Error(w, "Invalid request 10", http.StatusBadRequest)
-			return
+			var labelErr *labelError.LabelError
+			if !errors.As(err, &labelErr) || labelErr.Label != "CONFLICT" {
+				http.Error(w, "Invalid request 10", http.StatusBadRequest)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			w.WriteHeader(http.StatusConflict)
+		} else {
+			w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+			w.WriteHeader(http.StatusCreated)
 		}
 
 		jsonResponse := JSONResponse{
 			Result: url.Short,
 		}
-
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.WriteHeader(http.StatusCreated)
-
 		if err := json.NewEncoder(w).Encode(&jsonResponse); err != nil {
 			http.Error(w, "Invalid request 9", http.StatusBadRequest)
 			return
@@ -86,12 +92,17 @@ func (h *Handler) SetURL() http.HandlerFunc {
 		urlPair := entity.NewURL(string(url), h.BaseURL)
 		err = h.repo.SetURL(ctx, userID, urlPair)
 		if err != nil {
-			http.Error(w, "Invalid request 10", http.StatusBadRequest)
-			return
+			var labelErr *labelError.LabelError
+			if !errors.As(err, &labelErr) || labelErr.Label != "CONFLICT" {
+				http.Error(w, "Invalid request 10", http.StatusBadRequest)
+				return
+			}
+			w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+			w.WriteHeader(http.StatusConflict)
+		} else {
+			w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+			w.WriteHeader(http.StatusCreated)
 		}
-
-		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-		w.WriteHeader(http.StatusCreated)
 		w.Write([]byte(urlPair.Short))
 	}
 }

@@ -63,6 +63,7 @@ func createJSONEncodedResponse(t *testing.T, responseURL string) string {
 
 func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 	url := entity.NewURL("fullURL", ts.URL)
+	conflictUrl := entity.NewURL("conflict", ts.URL)
 	return []testStruct{
 		{
 			name:        "test create incorrect method",
@@ -347,6 +348,55 @@ func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 				headerLocation: "",
 				code:           http.StatusOK,
 				contentType:    "",
+			},
+		},
+		{
+			name:        "test json-api create url conflict",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodPost,
+				target: ts.URL + "/api/shorten",
+				body:   strings.NewReader("{\"url\":\"conflict\"}"),
+			},
+			result: testResultStruct{
+				body:           createJSONEncodedResponse(t, conflictUrl.Short),
+				headerLocation: "",
+				code:           http.StatusConflict,
+				contentType:    "application/json; charset=UTF-8",
+			},
+		},
+		{
+			name:        "test create url conflict",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodPost,
+				target: ts.URL + "/",
+				body:   strings.NewReader("conflict"),
+			},
+			result: testResultStruct{
+				body:           conflictUrl.Short,
+				headerLocation: "",
+				code:           http.StatusConflict,
+				contentType:    "text/plain; charset=UTF-8",
+			},
+		},
+		{
+			name:        "test json-api create url batch positive",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodPost,
+				target: ts.URL + "/api/shorten/batch",
+				body: strings.NewReader("[{\"correlation_id\":\"string id\",\"original_url\":\"original url\"}," +
+					"{\"correlation_id\":\"string id1\",\"original_url\":\"original url1\"}]"),
+			},
+			result: testResultStruct{
+				body: "[{\"correlation_id\":\"string id\"," +
+					"\"short_url\":\"" + ts.URL + "/d2a6fdf1db40a4efe500fa10cd71c939\"}," +
+					"{\"correlation_id\":\"string id1\"," +
+					"\"short_url\":\"" + ts.URL + "/0792df6a3cc8943351bbe3c338cae56a\"}]\n",
+				headerLocation: "",
+				code:           http.StatusCreated,
+				contentType:    "application/json; charset=UTF-8",
 			},
 		},
 	}

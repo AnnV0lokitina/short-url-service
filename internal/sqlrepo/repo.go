@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"time"
@@ -35,7 +36,7 @@ func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
 		"user_id bigint," +
 		"short_url text not null," +
 		"original_url text not null," +
-		"unique (short_url)" +
+		"unique (original_url)" +
 		")"
 	if _, err := conn.Exec(ctx, sql); err != nil {
 		return nil, err
@@ -61,13 +62,15 @@ func (r *Repo) PingBD(ctx context.Context) bool {
 func (r *Repo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	// DO NOTHING
 	sql := "INSERT INTO urls (user_id, short_url, original_url)" +
 		"VALUES ($1, $2, $3)" +
-		"ON CONFLICT (short_url) DO NOTHING"
-	//"returning original_url, user_id"DO UPDATE set original_url=excluded.original_url
-	if _, err := r.conn.Exec(ctx, sql, userID, url.Short, url.Original); err != nil {
+		"ON CONFLICT (original_url) DO NOTHING"
+	result, err := r.conn.Exec(ctx, sql, userID, url.Short, url.Original)
+	if err != nil {
 		return err
+	}
+	if result.RowsAffected() == 0 {
+		return labelError.NewLabelError("CONFLICT", errors.New("URL exists"))
 	}
 	return nil
 }
@@ -127,7 +130,7 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 
 	sql := "INSERT INTO urls (user_id, short_url, original_url)" +
 		"VALUES ($1, $2, $3)" +
-		"ON CONFLICT (short_url) DO NOTHING"
+		"ON CONFLICT (original_url) DO NOTHING"
 
 	_, err = tx.Prepare(ctx, "insert", sql)
 	if err != nil {

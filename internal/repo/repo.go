@@ -100,3 +100,13 @@ func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, bool
 	}
 	return log, true, nil
 }
+
+func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
+	for _, item := range list {
+		err := r.SetURL(ctx, userID, item.URL)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

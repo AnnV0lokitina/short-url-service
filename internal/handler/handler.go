@@ -20,6 +20,7 @@ type Repo interface {
 	GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error)
 	PingBD(ctx context.Context) bool
 	Close(context.Context) error
+	AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error
 }
 
 type Handler struct {
@@ -42,6 +43,7 @@ func NewHandler(baseURL string, repo Repo) *Handler {
 	h.Get("/{id}", h.GetURL())
 	h.Get("/api/user/urls", h.GetUserURLList())
 	h.Get("/ping", h.PingDB())
+	h.Post("/api/shorten/batch", h.ShortenBatch())
 	h.MethodNotAllowed(h.ExecIfNotAllowed())
 
 	return h

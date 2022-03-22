@@ -17,13 +17,16 @@ type PgxIface interface {
 	Exec(ctx context.Context, sql string, arguments ...interface{}) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...interface{}) (pgx.Rows, error)
 	QueryRow(ctx context.Context, sql string, args ...interface{}) pgx.Row
+	Begin(ctx context.Context) (pgx.Tx, error)
 }
 
 type Repo struct {
-	conn PgxIface
+	conn PgxIface // *pgx.Conn
 }
 
 func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
+	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
 	conn, err := pgx.Connect(ctx, dsn)
 	if err != nil {
 		return nil, err
@@ -47,6 +50,8 @@ func (r *Repo) Close(ctx context.Context) error {
 }
 
 func (r *Repo) PingBD(ctx context.Context) bool {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
 	if err := r.conn.Ping(ctx); err != nil {
 		return false
 	}
@@ -54,6 +59,8 @@ func (r *Repo) PingBD(ctx context.Context) bool {
 }
 
 func (r *Repo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
 	// DO NOTHING
 	sql := "INSERT INTO urls (user_id, short_url, original_url)" +
 		"VALUES ($1, $2, $3)" +
@@ -66,6 +73,8 @@ func (r *Repo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error
 }
 
 func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
 	var originalURL string
 	sql := "select original_url from urls where short_url=$1"
 	err := r.conn.QueryRow(ctx, sql, shortURL).Scan(&originalURL)
@@ -83,6 +92,8 @@ func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, 
 }
 
 func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
 	sql := "select short_url, original_url from urls where user_id=$1"
 	rows, _ := r.conn.Query(ctx, sql, id)
 	log := make([]*entity.URL, 0)
@@ -102,4 +113,38 @@ func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bo
 		return nil, false, nil
 	}
 	return log, true, nil
+}
+
+func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	tx, err := r.conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	sql := "INSERT INTO urls (user_id, short_url, original_url)" +
+		"VALUES ($1, $2, $3)" +
+		"ON CONFLICT (short_url) DO NOTHING"
+
+	_, err = tx.Prepare(ctx, "insert", sql)
+	if err != nil {
+		return err
+	}
+
+	batch := &pgx.Batch{}
+	for _, item := range list {
+		batch.Queue("insert", userID, item.URL.Short, item.URL.Original)
+	}
+
+	br := tx.SendBatch(ctx, batch)
+	_, err = br.Exec()
+	if err != nil {
+		return err
+	}
+	br.Close()
+	tx.Commit(ctx)
+	return nil
 }

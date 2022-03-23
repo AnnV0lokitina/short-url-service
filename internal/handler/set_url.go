@@ -11,14 +11,6 @@ import (
 	netUrl "net/url"
 )
 
-type JSONRequest struct {
-	URL string `json:"url"`
-}
-
-type JSONResponse struct {
-	Result string `json:"result"`
-}
-
 func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
@@ -44,8 +36,9 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 			http.Error(w, "Invalid request 8", http.StatusBadRequest)
 			return
 		}
-
+		// создание объекта приложения
 		url := entity.NewURL(parsedRequest.URL, h.BaseURL)
+		// запись
 		err = h.repo.SetURL(ctx, userID, url)
 		if err != nil {
 			var labelErr *labelError.LabelError
@@ -60,6 +53,7 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 			w.WriteHeader(http.StatusCreated)
 		}
 
+		// конвертация данных приложения в формат ответа
 		jsonResponse := JSONResponse{
 			Result: url.Short,
 		}

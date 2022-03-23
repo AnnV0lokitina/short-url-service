@@ -3,33 +3,9 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"io"
 	"net/http"
 )
-
-type itemInput struct {
-	CorrelationID string `json:"correlation_id"`
-	OriginalURL   string `json:"original_url"`
-}
-
-type itemOutput struct {
-	CorrelationID string `json:"correlation_id"`
-	ShortURL      string `json:"short_url"`
-}
-
-func (ii itemInput) toBatchURLItem(serverAddress string) *entity.BatchURLItem {
-	return entity.NewBatchURLItem(
-		ii.CorrelationID,
-		ii.OriginalURL,
-		serverAddress,
-	)
-}
-
-func (io *itemOutput) fromBatchURLItem(item *entity.BatchURLItem) {
-	io.CorrelationID = item.CorrelationID
-	io.ShortURL = item.URL.Short
-}
 
 func (h *Handler) ShortenBatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -47,30 +23,29 @@ func (h *Handler) ShortenBatch() http.HandlerFunc {
 			return
 		}
 
-		var itemInputList []itemInput
+		// получение данных из запроса
+		var itemInputList []JSONItemRequest
 		if err := json.Unmarshal(request, &itemInputList); err != nil {
 			http.Error(w, "Invalid request 7", http.StatusBadRequest)
 			return
 		}
 
-		list := make([]*entity.BatchURLItem, 0)
-		for _, item := range itemInputList {
-			urlItem := item.toBatchURLItem(h.BaseURL)
-			list = append(list, urlItem)
-		}
+		// конвертация в объекты приложения
+		batchURLList := JSONListToURLList(itemInputList, h.BaseURL)
+		// JSONItemRequest нельзя передавать в ядро бизнес логики
+		// т.к. он лишь описывает формат полученных данных
+		// в случае замены api (например на GRPC), JSONItemRequest будет бесполезен
 
-		err = h.repo.AddBatch(ctx, userID, list)
+		// запись данных приложения в репозиторий
+		// функцию можно вынести в слой service, но она будет только проксировать вызов
+		err = h.repo.AddBatch(ctx, userID, batchURLList)
 		if err != nil {
 			http.Error(w, "Error add batch", http.StatusBadRequest)
 			return
 		}
 
-		outputList := make([]itemOutput, 0)
-		for _, item := range list {
-			i := &itemOutput{}
-			i.fromBatchURLItem(item)
-			outputList = append(outputList, *i)
-		}
+		// конвертация результата работы в JSON объекты для вывода пользователю
+		outputList := URLListTOJSONList(batchURLList)
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		w.WriteHeader(http.StatusCreated)

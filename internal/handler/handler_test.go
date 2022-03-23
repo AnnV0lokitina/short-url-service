@@ -2,6 +2,7 @@ package handler
 
 import (
 	"compress/gzip"
+	repo2 "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/caarlos0/env/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -51,7 +52,7 @@ func getResponseReader(t *testing.T, resp *http.Response) io.Reader {
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
-	repo := new(MockedRepo)
+	repo := new(repo2.MockedRepo)
 	handler := NewHandler("", repo)
 	ts := httptest.NewServer(handler)
 	handler.BaseURL = ts.URL
@@ -61,10 +62,10 @@ func TestHandler_ServeHTTP(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tmpURLError = tt.setURLError
+			repo2.TmpURLError = tt.setURLError
 
 			if tt.request.dbEnabled != nil {
-				pingDB = *tt.request.dbEnabled
+				repo2.PingDB = *tt.request.dbEnabled
 			}
 
 			resp := testRequest(t, tt.request)
@@ -102,7 +103,7 @@ func TestNewHandler(t *testing.T) {
 		baseURL string
 	}
 
-	repo := new(MockedRepo)
+	repo := new(repo2.MockedRepo)
 
 	tests := []struct {
 		name string

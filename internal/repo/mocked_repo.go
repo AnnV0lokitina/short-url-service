@@ -1,4 +1,4 @@
-package handler
+package repo
 
 import (
 	"context"
@@ -10,10 +10,10 @@ import (
 
 var (
 	tmpURL      *entity.URL
-	tmpURLError = false
+	TmpURLError = false
 	tmpURLList  []*entity.URL
 	tmpUserID   uint32
-	pingDB      bool
+	PingDB      bool
 )
 
 type MockedRepo struct {
@@ -21,7 +21,7 @@ type MockedRepo struct {
 }
 
 func (r *MockedRepo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error {
-	if tmpURLError {
+	if TmpURLError {
 		return errors.New("error")
 	}
 	tmpURL = url
@@ -60,7 +60,7 @@ func (r *MockedRepo) Close(_ context.Context) error {
 }
 
 func (r *MockedRepo) PingBD(ctx context.Context) bool {
-	return pingDB
+	return PingDB
 }
 
 func (r *MockedRepo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {

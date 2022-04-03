@@ -10,6 +10,8 @@ import (
 )
 
 const batchSize = 2
+const writeToDBDuration = 5 * time.Minute
+const nOfWorkers = 2
 
 type Repo interface {
 	SetURL(ctx context.Context, userID uint32, url *entity.URL) error
@@ -64,9 +66,7 @@ func (s *Service) DeleteURLList(userID uint32, checksums []string) {
 	s.deleteChanInput = make(chan *JobDelete, len(checksums))
 	go func() {
 		fmt.Println("start wait")
-		duration := 5 * time.Minute
-		ctx, _ := context.WithTimeout(context.Background(), duration)
-		s.ProcessDeleteRequests(ctx, 2)
+		s.processDeleteRequests(nOfWorkers)
 		fmt.Println("end wait")
 	}()
 	fmt.Println("start send")
@@ -78,9 +78,9 @@ func (s *Service) DeleteURLList(userID uint32, checksums []string) {
 	fmt.Println("end send")
 }
 
-func (s *Service) ProcessDeleteRequests(ctx context.Context, workersCount int) {
+func (s *Service) processDeleteRequests(workersCount int) {
 	fmt.Println("fanOutDeleteURL create")
-	fanOutChs := fanOutDeleteURL(ctx, s.deleteChanInput, workersCount)
+	fanOutChs := fanOutDeleteURL(s.deleteChanInput, workersCount)
 
 	fmt.Println("workerChs create")
 	workerChs := make([]chan *entity.UserShortURL, 0, workersCount)
@@ -92,16 +92,18 @@ func (s *Service) ProcessDeleteRequests(ctx context.Context, workersCount int) {
 
 	chanOut := fanInDeleteURL(workerChs...)
 	fmt.Println("fanInDeleteURL created!")
+
+	ctx, cancel := context.WithTimeout(context.Background(), writeToDBDuration)
 	g, _ := errgroup.WithContext(ctx)
 	g.Go(func() error {
-		return s.writeToDb(ctx, chanOut)
+		return s.writeToDB(ctx, chanOut)
 	})
-	if err := g.Wait(); err != nil {
-		fmt.Println(err)
-	}
+	g.Wait()
+	cancel()
+
 }
 
-func (s *Service) writeToDb(ctx context.Context, chanOut <-chan *entity.UserShortURL) error {
+func (s *Service) writeToDB(ctx context.Context, chanOut <-chan *entity.UserShortURL) error {
 	batch := make([]*entity.UserShortURL, 0, batchSize)
 	fmt.Println("start writeToDb")
 	for urlInfo := range chanOut {
@@ -148,7 +150,7 @@ func newWorkerDeleteURL(inputCh <-chan *JobDelete) chan *entity.UserShortURL {
 	return outCh
 }
 
-func fanOutDeleteURL(_ context.Context, inputCh chan *JobDelete, n int) []chan *JobDelete {
+func fanOutDeleteURL(inputCh chan *JobDelete, n int) []chan *JobDelete {
 	chs := make([]chan *JobDelete, 0, n)
 	for i := 0; i < n; i++ {
 		fmt.Println("create i ch fanOut")

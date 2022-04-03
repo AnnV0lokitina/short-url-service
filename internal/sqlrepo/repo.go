@@ -3,7 +3,6 @@ package sqlrepo
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"github.com/jackc/pgconn"
@@ -84,8 +83,6 @@ func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, 
 	var deleted bool
 	sql := "select original_url, deleted from urls where short_url=$1"
 	err := r.conn.QueryRow(ctx, sql, shortURL).Scan(&originalURL, &deleted)
-	fmt.Println(originalURL)
-	fmt.Println(deleted)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, false, nil

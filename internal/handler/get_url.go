@@ -24,10 +24,10 @@ func (h *Handler) GetURL() http.HandlerFunc {
 			w.WriteHeader(http.StatusTemporaryRedirect)
 			return
 		}
-		fmt.Println(err)
 		if err != nil {
 			var labelErr *labelError.LabelError
 			if errors.As(err, &labelErr) && labelErr.Label == "GONE" {
+				fmt.Println("GONE")
 				w.WriteHeader(http.StatusGone)
 				return
 			}

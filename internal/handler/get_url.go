@@ -3,7 +3,9 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
@@ -12,9 +14,18 @@ func (h *Handler) GetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 		checksum := chi.URLParam(r, "id")
-		shortURL := entity.CreateShortURL(checksum, h.BaseURL)
-		url, found, err := h.repo.GetURL(ctx, shortURL)
-		if err != nil || !found {
+		shortURL := entity.CreateShortURL(checksum, h.service.GetBaseURL())
+		url, found, err := h.service.GetRepo().GetURL(ctx, shortURL)
+		if !found {
+			http.Error(w, "Not found 4", http.StatusBadRequest)
+			return
+		}
+		if err != nil {
+			var labelErr *labelError.LabelError
+			if errors.As(err, &labelErr) && labelErr.Label == "GONE" {
+				w.WriteHeader(http.StatusGone)
+				return
+			}
 			http.Error(w, "Invalid request 4", http.StatusBadRequest)
 			return
 		}
@@ -33,7 +44,7 @@ func (h *Handler) GetUserURLList() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		list, found, err := h.repo.GetUserURLList(ctx, userID)
+		list, found, err := h.service.GetRepo().GetUserURLList(ctx, userID)
 		if err != nil || !found {
 			w.WriteHeader(http.StatusNoContent)
 			return

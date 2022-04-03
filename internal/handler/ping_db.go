@@ -8,7 +8,7 @@ import (
 func (h *Handler) PingDB() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
-		dbAvailable := h.repo.PingBD(ctx)
+		dbAvailable := h.service.GetRepo().PingBD(ctx)
 
 		if dbAvailable {
 			w.WriteHeader(http.StatusOK)

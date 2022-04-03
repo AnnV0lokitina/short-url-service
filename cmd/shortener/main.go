@@ -4,8 +4,10 @@ import (
 	"context"
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
+	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
 	"log"
+	"runtime"
 )
 
 func main() {
@@ -16,12 +18,15 @@ func main() {
 	repo := initRepo(ctx, cfg)
 	defer repo.Close(ctx)
 
-	handler := handlerPkg.NewHandler(cfg.BaseURL, repo)
+	service := service.NewService(cfg.BaseURL, repo)
+	service.ProcessDeleteRequests(ctx, runtime.NumCPU())
+	handler := handlerPkg.NewHandler(service)
+
 	application := NewApp(handler)
 	application.Run(cfg.ServerAddress)
 }
 
-func initRepo(ctx context.Context, cfg *config) handlerPkg.Repo {
+func initRepo(ctx context.Context, cfg *config) service.Repo {
 	if cfg.DataBaseDSN != "" {
 		repository, err := sqlrepo.NewSQLRepo(ctx, cfg.DataBaseDSN)
 		if err != nil {

@@ -3,6 +3,7 @@ package handler
 import (
 	"compress/gzip"
 	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
+	servicePkg "github.com/AnnV0lokitina/short-url-service.git/internal/service"
 	"github.com/caarlos0/env/v6"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -52,10 +53,10 @@ func getResponseReader(t *testing.T, resp *http.Response) io.Reader {
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
-	repo := new(repoPkg.MockedRepo)
-	handler := NewHandler("", repo)
+	service := new(servicePkg.MockedService)
+	handler := NewHandler(service)
 	ts := httptest.NewServer(handler)
-	handler.BaseURL = ts.URL
+	handler.service.SetBaseURL(ts.URL)
 
 	tests := getTestsDataList(t, ts)
 	defer ts.Close()
@@ -99,11 +100,12 @@ func TestNewHandler(t *testing.T) {
 	require.NoError(t, err)
 
 	type args struct {
-		repo    Repo
+		service Service
 		baseURL string
 	}
 
-	repo := new(repoPkg.MockedRepo)
+	service := new(servicePkg.MockedService)
+	service.SetBaseURL(cfg.BaseURL)
 
 	tests := []struct {
 		name string
@@ -113,18 +115,17 @@ func TestNewHandler(t *testing.T) {
 		{
 			name: "create new handler",
 			args: args{
-				repo:    repo,
+				service: service,
 				baseURL: cfg.BaseURL,
 			},
 			want: &Handler{
-				repo:    repo,
-				BaseURL: cfg.BaseURL,
+				service: service,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewHandler(tt.args.baseURL, tt.args.repo)
+			got := NewHandler(tt.args.service)
 			assert.ObjectsAreEqual(got, tt.want)
 		})
 	}

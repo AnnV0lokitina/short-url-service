@@ -31,14 +31,8 @@ func (h *Handler) ShortenBatch() http.HandlerFunc {
 		}
 
 		// конвертация в объекты приложения
-		batchURLList := JSONListToURLList(itemInputList, h.BaseURL)
-		// JSONItemRequest нельзя передавать в ядро бизнес логики
-		// т.к. он лишь описывает формат полученных данных
-		// в случае замены api (например на GRPC), JSONItemRequest будет бесполезен
-
-		// запись данных приложения в репозиторий
-		// функцию можно вынести в слой service, но она будет только проксировать вызов
-		err = h.repo.AddBatch(ctx, userID, batchURLList)
+		batchURLList := JSONListToURLList(itemInputList, h.service.GetBaseURL())
+		err = h.service.GetRepo().AddBatch(ctx, userID, batchURLList)
 		if err != nil {
 			http.Error(w, "Error add batch", http.StatusBadRequest)
 			return

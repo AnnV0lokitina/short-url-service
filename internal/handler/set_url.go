@@ -37,9 +37,9 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 			return
 		}
 		// создание объекта приложения
-		url := entity.NewURL(parsedRequest.URL, h.BaseURL)
+		url := entity.NewURL(parsedRequest.URL, h.service.GetBaseURL())
 		// запись
-		err = h.repo.SetURL(ctx, userID, url)
+		err = h.service.GetRepo().SetURL(ctx, userID, url)
 		if err != nil {
 			var labelErr *labelError.LabelError
 			if !errors.As(err, &labelErr) || labelErr.Label != "CONFLICT" {
@@ -83,8 +83,8 @@ func (h *Handler) SetURL() http.HandlerFunc {
 			return
 		}
 
-		urlPair := entity.NewURL(string(url), h.BaseURL)
-		err = h.repo.SetURL(ctx, userID, urlPair)
+		urlPair := entity.NewURL(string(url), h.service.GetBaseURL())
+		err = h.service.GetRepo().SetURL(ctx, userID, urlPair)
 		if err != nil {
 			var labelErr *labelError.LabelError
 			if !errors.As(err, &labelErr) || labelErr.Label != "CONFLICT" {

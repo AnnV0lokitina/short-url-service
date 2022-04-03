@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
@@ -14,26 +14,23 @@ const (
 	encoding              = "gzip"
 )
 
-type Repo interface {
-	SetURL(ctx context.Context, userID uint32, url *entity.URL) error
-	GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, error)
-	GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error)
-	PingBD(ctx context.Context) bool
-	Close(context.Context) error
-	AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error
+type Service interface {
+	DeleteURLList(userID uint32, checksums []string)
+	GetRepo() service.Repo
+	ProcessDeleteRequests(ctx context.Context, workersCount int)
+	GetBaseURL() string
+	SetBaseURL(baseURL string)
 }
 
 type Handler struct {
 	*chi.Mux
-	repo    Repo
-	BaseURL string
+	service Service
 }
 
-func NewHandler(baseURL string, repo Repo) *Handler {
+func NewHandler(service Service) *Handler {
 	h := &Handler{
 		Mux:     chi.NewMux(),
-		repo:    repo,
-		BaseURL: baseURL,
+		service: service,
 	}
 
 	h.Use(CompressMiddleware)
@@ -44,6 +41,7 @@ func NewHandler(baseURL string, repo Repo) *Handler {
 	h.Get("/api/user/urls", h.GetUserURLList())
 	h.Get("/ping", h.PingDB())
 	h.Post("/api/shorten/batch", h.ShortenBatch())
+	h.Delete("/api/user/urls", h.DeleteBatch())
 	h.MethodNotAllowed(h.ExecIfNotAllowed())
 
 	return h

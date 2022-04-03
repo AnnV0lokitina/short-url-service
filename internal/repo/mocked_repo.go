@@ -66,3 +66,7 @@ func (r *MockedRepo) PingBD(ctx context.Context) bool {
 func (r *MockedRepo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
 	return nil
 }
+
+func (r *MockedRepo) DeleteBatch(_ context.Context, _ []*entity.UserShortURL) error {
+	return nil
+}

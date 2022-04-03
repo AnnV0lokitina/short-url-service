@@ -61,3 +61,16 @@ func URLListTOJSONList(list []*entity.BatchURLItem) []JSONItemResponse {
 	}
 	return outputList
 }
+
+//type JSONIDListRequest []string
+//
+//func JSONIDListToURLList(inputList JSONIDListRequest, serverAddress string) []*entity.URL {
+//	list := make([]*entity.URL, 0)
+//	for _, checksum := range inputList {
+//		urlItem := &entity.URL{
+//			Short: entity.CreateShortURL(checksum, serverAddress),
+//		}
+//		list = append(list, urlItem)
+//	}
+//	return list
+//}

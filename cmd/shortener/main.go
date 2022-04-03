@@ -18,7 +18,6 @@ func main() {
 	defer repo.Close(ctx)
 
 	service := service.NewService(cfg.BaseURL, repo)
-	//service.ProcessDeleteRequests(ctx, runtime.NumCPU())
 	handler := handlerPkg.NewHandler(service)
 
 	application := NewApp(handler)

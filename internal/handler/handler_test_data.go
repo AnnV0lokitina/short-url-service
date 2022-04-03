@@ -399,5 +399,35 @@ func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 				contentType:    "application/json; charset=UTF-8",
 			},
 		},
+		{
+			name:        "test delete url positive",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodDelete,
+				target: ts.URL + "/api/user/urls",
+				body:   strings.NewReader("[\"1\",\"2\",\"3\"]"),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusAccepted,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "test delete url error",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodDelete,
+				target: ts.URL + "/api/user/urls",
+				body:   strings.NewReader("[\"1\",\"2\",\"3\",]"),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
 	}
 }

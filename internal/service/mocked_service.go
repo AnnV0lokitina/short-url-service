@@ -24,5 +24,5 @@ func (s *MockedService) GetRepo() Repo {
 	return repo
 }
 
-func (s *MockedService) DeleteURLList(userID uint32, checksums []string) {
+func (s *MockedService) DeleteURLList(_ uint32, _ []string) {
 }

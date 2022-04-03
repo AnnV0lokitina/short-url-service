@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"github.com/go-chi/chi/v5"
@@ -16,9 +15,7 @@ func (h *Handler) GetURL() http.HandlerFunc {
 		ctx := context.Background()
 		checksum := chi.URLParam(r, "id")
 		shortURL := entity.CreateShortURL(checksum, h.service.GetBaseURL())
-		fmt.Println(shortURL)
 		url, found, err := h.service.GetRepo().GetURL(ctx, shortURL)
-		fmt.Println(found)
 		if found {
 			w.Header().Set("Location", url.Original)
 			w.WriteHeader(http.StatusTemporaryRedirect)
@@ -27,7 +24,6 @@ func (h *Handler) GetURL() http.HandlerFunc {
 		if err != nil {
 			var labelErr *labelError.LabelError
 			if errors.As(err, &labelErr) && labelErr.Label == "GONE" {
-				fmt.Println("GONE")
 				w.WriteHeader(http.StatusGone)
 				return
 			}

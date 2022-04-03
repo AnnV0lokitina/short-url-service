@@ -89,7 +89,7 @@ func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, 
 		}
 		return nil, false, errors.New("get url error")
 	}
-	if deleted == true {
+	if deleted {
 		return nil, false, labelError.NewLabelError("GONE", errors.New("URL deleted"))
 	}
 	url := &entity.URL{

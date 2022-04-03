@@ -69,7 +69,7 @@ func (s *Service) DeleteURLList(userID uint32, checksums []string) {
 
 func (s *Service) ProcessDeleteRequests(ctx context.Context, workersCount int) {
 	duration := 5 * time.Minute
-	ctx, _ = context.WithTimeout(context.Background(), duration)
+	ctx, cancel := context.WithTimeout(context.Background(), duration)
 	s.deleteChanInput = make(chan *JobDelete)
 	fmt.Println("deleteChanInput create")
 	fanOutChs := fanOutDeleteURL(ctx, s.deleteChanInput, workersCount)
@@ -99,6 +99,7 @@ func (s *Service) ProcessDeleteRequests(ctx context.Context, workersCount int) {
 				err := s.repo.DeleteBatch(ctx, batch)
 				if err != nil {
 					close(s.deleteChanInput)
+					cancel()
 					log.Fatal(err)
 				}
 				batch = batch[:0]
@@ -109,8 +110,8 @@ func (s *Service) ProcessDeleteRequests(ctx context.Context, workersCount int) {
 		}
 		fmt.Println("deleteChanInput close")
 		close(s.deleteChanInput)
+		cancel()
 	}()
-	return
 }
 
 func newWorkerDeleteURL(ctx context.Context, inputCh <-chan *JobDelete) chan *entity.UserShortURL {

@@ -7,7 +7,6 @@ import (
 	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
 	"log"
-	"runtime"
 )
 
 func main() {
@@ -19,7 +18,7 @@ func main() {
 	defer repo.Close(ctx)
 
 	service := service.NewService(cfg.BaseURL, repo)
-	service.ProcessDeleteRequests(ctx, runtime.NumCPU())
+	//service.ProcessDeleteRequests(ctx, runtime.NumCPU())
 	handler := handlerPkg.NewHandler(service)
 
 	application := NewApp(handler)

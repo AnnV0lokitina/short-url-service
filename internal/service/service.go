@@ -2,14 +2,15 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"sync"
+	"golang.org/x/sync/errgroup"
+	"log"
 	"time"
 )
 
 const batchSize = 2
 const writeToDBDuration = 5 * time.Minute
-const nOfWorkers = 2
 
 type Repo interface {
 	SetURL(ctx context.Context, userID uint32, url *entity.URL) error
@@ -18,26 +19,19 @@ type Repo interface {
 	PingBD(ctx context.Context) bool
 	Close(context.Context) error
 	AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error
-	DeleteBatch(ctx context.Context, list []*entity.UserShortURL) error
+	DeleteBatch(ctx context.Context, userID uint32, list []string) error
+	CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error)
 }
 
 type Service struct {
-	baseURL string
-	repo    Repo
+	baseURL     string
+	repo        Repo
+	jobChDelete chan *JobDelete
 }
 
 type JobDelete struct {
-	UserID   uint32
-	Checksum string
-	BaseURL  string
-}
-
-func NewJobDelete(userID uint32, checksum string, baseURL string) *JobDelete {
-	return &JobDelete{
-		UserID:   userID,
-		Checksum: checksum,
-		BaseURL:  baseURL,
-	}
+	UserID uint32
+	URLs   []string
 }
 
 func NewService(baseURL string, repo Repo) *Service {
@@ -59,120 +53,57 @@ func (s *Service) GetRepo() Repo {
 	return s.repo
 }
 
-func (s *Service) DeleteURLList(userID uint32, checksums []string) {
-	deleteChanInput := make(chan *JobDelete, len(checksums))
-	go func() {
-		s.processDeleteRequests(deleteChanInput, nOfWorkers)
-	}()
-	for _, checksum := range checksums {
-		deleteChanInput <- NewJobDelete(userID, checksum, s.baseURL)
-	}
-	close(deleteChanInput)
-}
+func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
+	s.jobChDelete = make(chan *JobDelete)
+	g, _ := errgroup.WithContext(ctx)
 
-func (s *Service) processDeleteRequests(deleteChanInput chan *JobDelete, workersCount int) {
-	fanOutChs := fanOutDeleteURL(deleteChanInput, workersCount)
-	workerChs := make([]chan *entity.UserShortURL, 0, workersCount)
-	for _, fanOutCh := range fanOutChs {
-		w := newWorkerDeleteURL(fanOutCh)
-		workerChs = append(workerChs, w)
-	}
-
-	chanOut := fanInDeleteURL(workerChs...)
-
-	ctx, cancel := context.WithTimeout(context.Background(), writeToDBDuration)
-	s.writeToDB(ctx, chanOut)
-	cancel()
-}
-
-func (s *Service) writeToDB(ctx context.Context, chanOut <-chan *entity.UserShortURL) error {
-	batch := make([]*entity.UserShortURL, 0, batchSize)
-	for urlInfo := range chanOut {
-		batch = append(batch, urlInfo)
-		if len(batch) < cap(batch) {
-			continue
-		}
-		err := s.repo.DeleteBatch(ctx, batch)
-		if err != nil {
-			return err
-		}
-		batch = batch[:0]
-	}
-	if len(batch) > 0 {
-		err := s.repo.DeleteBatch(ctx, batch)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func newWorkerDeleteURL(inputCh <-chan *JobDelete) chan *entity.UserShortURL {
-	outCh := make(chan *entity.UserShortURL)
-
-	go func() {
-		for job := range inputCh {
-			// параллельная обработка входящих данных
-			outCh <- entity.NewUserShortURL(job.UserID, job.Checksum, job.BaseURL)
-		}
-
-		close(outCh)
-	}()
-
-	return outCh
-}
-
-func fanOutDeleteURL(inputCh chan *JobDelete, n int) []chan *JobDelete {
-	chs := make([]chan *JobDelete, 0, n)
-	for i := 0; i < n; i++ {
-		ch := make(chan *JobDelete)
-		chs = append(chs, ch)
-	}
-
-	go func() {
-		defer func(chs []chan *JobDelete) {
-			for _, ch := range chs {
-				close(ch)
-			}
-		}(chs)
-
-		for i := 0; ; i++ {
-			if i == len(chs) {
-				i = 0
-			}
-			job, ok := <-inputCh
-			if !ok {
-				return
-			}
-
-			ch := chs[i]
-			ch <- job
-		}
-	}()
-
-	return chs
-}
-
-func fanInDeleteURL(inputChs ...chan *entity.UserShortURL) chan *entity.UserShortURL {
-	outCh := make(chan *entity.UserShortURL)
-
-	go func() {
-		wg := &sync.WaitGroup{}
-
-		for _, inputCh := range inputChs {
-			wg.Add(1)
-
-			go func(inputCh chan *entity.UserShortURL) {
-				defer func() {
-					wg.Done()
-				}()
-				for item := range inputCh {
-					outCh <- item
+	for i := 1; i <= nOfWorkers; i++ {
+		fmt.Println(i)
+		j := i
+		g.Go(func() error {
+			fmt.Print("start")
+			fmt.Println(j)
+			for job := range s.jobChDelete {
+				fmt.Println(job)
+				err := s.repo.DeleteBatch(ctx, job.UserID, job.URLs)
+				if err != nil {
+					return err
 				}
-			}(inputCh)
-		}
-		wg.Wait()
-		close(outCh)
+			}
+			return nil
+		})
+	}
+
+	go func() {
+		<-ctx.Done()
+		close(s.jobChDelete)
 	}()
-	return outCh
+
+	if err := g.Wait(); err != nil {
+		log.Println(err)
+	}
+}
+
+func (s *Service) DeleteURLList(ctx context.Context, userID uint32, checksums []string) error {
+	list := make([]string, 0, len(checksums))
+	for _, checksum := range checksums {
+		shortURL := entity.CreateShortURL(checksum, s.baseURL)
+		list = append(list, shortURL)
+	}
+	var err error
+	list, err = s.repo.CheckUserBatch(ctx, userID, list)
+	if err != nil {
+		return err
+	}
+	if len(list) <= 0 {
+		return nil
+	}
+	job := &JobDelete{
+		UserID: userID,
+		URLs:   list,
+	}
+	fmt.Println(job)
+	fmt.Println(job.URLs)
+	s.jobChDelete <- job
+	return nil
 }

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -8,6 +9,7 @@ import (
 
 func (h *Handler) DeleteBatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := context.Background()
 		userID, err := authorization(w, r)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
@@ -27,9 +29,12 @@ func (h *Handler) DeleteBatch() http.HandlerFunc {
 			return
 		}
 
-		h.service.DeleteURLList(userID, itemChecksumList)
+		err = h.service.DeleteURLList(ctx, userID, itemChecksumList)
+		if err != nil {
+			http.Error(w, "Create user error 8", http.StatusBadRequest)
+			return
+		}
 
 		w.WriteHeader(http.StatusAccepted)
-
 	}
 }

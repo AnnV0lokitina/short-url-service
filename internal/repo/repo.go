@@ -111,6 +111,10 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 	return nil
 }
 
-func (r *Repo) DeleteBatch(_ context.Context, _ []*entity.UserShortURL) error {
+func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, list []string) error {
 	return nil
+}
+
+func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error) {
+	return nil, nil
 }

@@ -10,23 +10,11 @@ type URL struct {
 	Original string `json:"original_url"`
 }
 
-type UserShortURL struct {
-	UserID   uint32
-	ShortURL string
-}
-
 func NewURL(originalURL string, serverAddress string) *URL {
 	checksum := createChecksum(originalURL)
 	return &URL{
 		Short:    CreateShortURL(checksum, serverAddress),
 		Original: originalURL,
-	}
-}
-
-func NewUserShortURL(userID uint32, checksum string, serverAddress string) *UserShortURL {
-	return &UserShortURL{
-		UserID:   userID,
-		ShortURL: CreateShortURL(checksum, serverAddress),
 	}
 }
 

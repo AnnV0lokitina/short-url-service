@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -14,7 +15,7 @@ const (
 )
 
 type Service interface {
-	DeleteURLList(userID uint32, checksums []string)
+	DeleteURLList(ctx context.Context, userID uint32, checksums []string) error
 	GetRepo() service.Repo
 	GetBaseURL() string
 	SetBaseURL(baseURL string)

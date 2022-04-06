@@ -67,6 +67,10 @@ func (r *MockedRepo) AddBatch(ctx context.Context, userID uint32, list []*entity
 	return nil
 }
 
-func (r *MockedRepo) DeleteBatch(_ context.Context, _ []*entity.UserShortURL) error {
+func (r *MockedRepo) DeleteBatch(_ context.Context, userID uint32, list []string) error {
 	return nil
+}
+
+func (r *MockedRepo) CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error) {
+	return nil, nil
 }

@@ -22,7 +22,8 @@ type PgxIface interface {
 }
 
 type Repo struct {
-	conn PgxIface // *pgx.Conn
+	//conn PgxIface // *pgx.Conn
+	conn *pgx.Conn
 }
 
 func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
@@ -157,7 +158,7 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 	return nil
 }
 
-func (r *Repo) DeleteBatch(ctx context.Context, list []*entity.UserShortURL) error {
+func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, list []string) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -178,8 +179,8 @@ func (r *Repo) DeleteBatch(ctx context.Context, list []*entity.UserShortURL) err
 	}
 
 	batch := &pgx.Batch{}
-	for _, item := range list {
-		batch.Queue("delete", true, item.ShortURL, item.UserID)
+	for _, shortURL := range list {
+		batch.Queue("delete", true, shortURL, userID)
 	}
 
 	br := tx.SendBatch(ctx, batch)
@@ -190,4 +191,52 @@ func (r *Repo) DeleteBatch(ctx context.Context, list []*entity.UserShortURL) err
 	br.Close()
 	tx.Commit(ctx)
 	return nil
+}
+
+func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	sql := "SELECT short_url " +
+		"FROM urls " +
+		"WHERE short_url=$1 " +
+		"AND deleted=$2 " +
+		"AND user_id=$3"
+
+	_, err := r.conn.Prepare(ctx, "query", sql)
+	if err != nil {
+		return nil, err
+	}
+
+	batch := &pgx.Batch{}
+	queryCount := len(list)
+
+	for _, shortURL := range list {
+		batch.Queue("query", shortURL, false, userID)
+	}
+
+	br := r.conn.SendBatch(ctx, batch)
+
+	shortURLs := make([]string, 0, len(list))
+	for i := 0; i < queryCount; i++ {
+		rows, err := br.Query()
+		if err != nil {
+			return nil, err
+		}
+
+		for k := 0; rows.Next(); k++ {
+			var shortURL string
+			if err := rows.Scan(&shortURL); err != nil {
+				return nil, err
+			}
+			shortURLs = append(shortURLs, shortURL)
+		}
+
+		if rows.Err() != nil {
+			return nil, rows.Err()
+		}
+	}
+
+	br.Close()
+	return shortURLs, nil
 }

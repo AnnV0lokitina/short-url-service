@@ -10,7 +10,7 @@ import (
 func (h *Handler) DeleteBatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
-		userID, err := authorization(w, r)
+		userID, err := authorizeUserAndSetCookie(w, r)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
 			return

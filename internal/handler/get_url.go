@@ -15,37 +15,33 @@ func (h *Handler) GetURL() http.HandlerFunc {
 		ctx := context.Background()
 		checksum := chi.URLParam(r, "id")
 		shortURL := entity.CreateShortURL(checksum, h.service.GetBaseURL())
-		url, found, err := h.service.GetRepo().GetURL(ctx, shortURL)
-		if found {
+		url, err := h.service.GetRepo().GetURL(ctx, shortURL)
+		if err == nil {
 			w.Header().Set("Location", url.Original)
 			w.WriteHeader(http.StatusTemporaryRedirect)
 			return
 		}
-		if err != nil {
-			var labelErr *labelError.LabelError
-			if errors.As(err, &labelErr) && labelErr.Label == "GONE" {
-				w.WriteHeader(http.StatusGone)
-				return
-			}
-			http.Error(w, "Invalid request 4", http.StatusBadRequest)
+		var labelErr *labelError.LabelError
+		if errors.As(err, &labelErr) && labelErr.Label == "GONE" {
+			w.WriteHeader(http.StatusGone)
 			return
 		}
-		http.Error(w, "Not found 4", http.StatusBadRequest)
+		http.Error(w, "Invalid request 4", http.StatusBadRequest)
 	}
 }
 
 func (h *Handler) GetUserURLList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
-		userID, err := authorization(w, r)
+		userID, err := authorizeUserAndSetCookie(w, r)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
 			return
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		list, found, err := h.service.GetRepo().GetUserURLList(ctx, userID)
-		if err != nil || !found {
+		list, err := h.service.GetRepo().GetUserURLList(ctx, userID)
+		if err != nil {
 			w.WriteHeader(http.StatusNoContent)
 			return
 		}

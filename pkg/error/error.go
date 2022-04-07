@@ -10,6 +10,12 @@ type LabelError struct {
 	Err   error
 }
 
+const (
+	TypeConflict = "CONFLICT"
+	TypeNotFound = "NOT FOUND"
+	TypeGone     = "GONE"
+)
+
 func (le *LabelError) Error() string {
 	return fmt.Sprintf("[%s] %v", le.Label, le.Err)
 }

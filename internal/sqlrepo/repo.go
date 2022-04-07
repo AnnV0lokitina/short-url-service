@@ -74,12 +74,12 @@ func (r *Repo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error
 		return err
 	}
 	if result.RowsAffected() == 0 {
-		return labelError.NewLabelError("CONFLICT", errors.New("URL exists"))
+		return labelError.NewLabelError(labelError.TypeConflict, errors.New("URL exists"))
 	}
 	return nil
 }
 
-func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, error) {
+func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	var originalURL string
@@ -88,21 +88,21 @@ func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, 
 	err := r.conn.QueryRow(ctx, sql, shortURL).Scan(&originalURL, &deleted)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil, false, nil
+			return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 		}
-		return nil, false, errors.New("get url error")
+		return nil, errors.New("get url error")
 	}
 	if deleted {
-		return nil, false, labelError.NewLabelError("GONE", errors.New("URL deleted"))
+		return nil, labelError.NewLabelError(labelError.TypeGone, errors.New("URL deleted"))
 	}
 	url := &entity.URL{
 		Short:    shortURL,
 		Original: originalURL,
 	}
-	return url, true, nil
+	return url, nil
 }
 
-func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error) {
+func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 	sql := "select short_url, original_url from urls where user_id=$1"
@@ -113,7 +113,7 @@ func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bo
 		var originalURL string
 		err := rows.Scan(&shortURL, &originalURL)
 		if err != nil {
-			return nil, false, err
+			return nil, err
 		}
 		log = append(log, &entity.URL{
 			Short:    shortURL,
@@ -121,9 +121,9 @@ func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bo
 		})
 	}
 	if len(log) == 0 {
-		return nil, false, nil
+		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
-	return log, true, nil
+	return log, nil
 }
 
 func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {

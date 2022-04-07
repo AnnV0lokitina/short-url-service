@@ -15,23 +15,26 @@ var (
 	cookieName = "login"
 )
 
-func authorization(w http.ResponseWriter, r *http.Request) (uint32, error) {
-	var userID uint32
-	login, err := getLoginFromCookie(r)
-	if err == nil {
-		userID, err = getIDFromLogin(login)
-		if err != nil {
-			return 0, err
-		}
-		return userID, nil
-	}
-	userID, err = generateUserID()
+func authorizeUserAndSetCookie(w http.ResponseWriter, r *http.Request) (uint32, error) {
+	userID, err := getUserIDFromRequest(r)
 	if err != nil {
 		return 0, err
 	}
-	login = generateLogin(userID)
-	setLoginToCookie(w, login)
+	setUserIDCookie(w, userID)
 	return userID, nil
+}
+
+func getUserIDFromRequest(r *http.Request) (userID uint32, err error) {
+	login, err := getLoginFromCookie(r)
+	if err == nil {
+		return getIDFromLogin(login)
+	}
+	return generateUserID()
+}
+
+func setUserIDCookie(w http.ResponseWriter, userID uint32) {
+	login := generateLogin(userID)
+	setLoginToCookie(w, login)
 }
 
 func getLoginFromCookie(request *http.Request) (string, error) {

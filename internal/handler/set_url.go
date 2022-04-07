@@ -14,7 +14,7 @@ import (
 func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
-		userID, err := authorization(w, r)
+		userID, err := authorizeUserAndSetCookie(w, r)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
 			return
@@ -67,7 +67,8 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 func (h *Handler) SetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
-		userID, err := authorization(w, r)
+		userID, err := authorizeUserAndSetCookie(w, r)
+		// fmt.Println(userID)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
 			return

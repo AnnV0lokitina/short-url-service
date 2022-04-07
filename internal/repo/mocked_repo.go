@@ -28,31 +28,32 @@ func (r *MockedRepo) SetURL(ctx context.Context, userID uint32, url *entity.URL)
 	tmpURLList = []*entity.URL{tmpURL}
 	tmpUserID = userID
 	if url.Original == "conflict" {
-		return labelError.NewLabelError("CONFLICT", errors.New("URL exists"))
+		return labelError.NewLabelError(labelError.TypeConflict, errors.New("URL exists"))
 	}
 	return nil
 }
 
-func (r *MockedRepo) GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, error) {
+func (r *MockedRepo) GetURL(ctx context.Context, shortURL string) (*entity.URL, error) {
 	if shortURL == tmpURL.Short {
-		return tmpURL, true, nil
+		return tmpURL, nil
 	}
-	return nil, false, errors.New("no url saved")
+	return nil, errors.New("no url saved")
 }
 
-func (r *MockedRepo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error) {
+func (r *MockedRepo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
 	if tmpUserID == id {
-		return tmpURLList, true, nil
+		return tmpURLList, nil
 	}
+	// fmt.Println(id)
 	if id == 1234 {
 		return []*entity.URL{
 			&entity.URL{
 				Short:    "short",
 				Original: "original",
 			},
-		}, true, nil
+		}, nil
 	}
-	return nil, false, nil
+	return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 }
 
 func (r *MockedRepo) Close(_ context.Context) error {

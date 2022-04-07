@@ -2,8 +2,10 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo/file"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 )
 
 type Repo struct {
@@ -81,24 +83,24 @@ func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
 	return nil
 }
 
-func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, bool, error) {
+func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
 	originalURL, ok := r.list[shortURL]
 	if !ok {
-		return nil, false, nil
+		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
 	url := &entity.URL{
 		Short:    shortURL,
 		Original: originalURL,
 	}
-	return url, true, nil
+	return url, nil
 }
 
-func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, bool, error) {
+func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
 	log, ok := r.userLog[id]
 	if !ok {
-		return nil, false, nil
+		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
-	return log, true, nil
+	return log, nil
 }
 
 func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {

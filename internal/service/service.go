@@ -2,20 +2,15 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"golang.org/x/sync/errgroup"
 	"log"
-	"time"
 )
-
-const batchSize = 2
-const writeToDBDuration = 5 * time.Minute
 
 type Repo interface {
 	SetURL(ctx context.Context, userID uint32, url *entity.URL) error
-	GetURL(ctx context.Context, shortURL string) (*entity.URL, bool, error)
-	GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, bool, error)
+	GetURL(ctx context.Context, shortURL string) (*entity.URL, error)
+	GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, error)
 	PingBD(ctx context.Context) bool
 	Close(context.Context) error
 	AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error
@@ -58,13 +53,8 @@ func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
 	g, _ := errgroup.WithContext(ctx)
 
 	for i := 1; i <= nOfWorkers; i++ {
-		fmt.Println(i)
-		j := i
 		g.Go(func() error {
-			fmt.Print("start")
-			fmt.Println(j)
 			for job := range s.jobChDelete {
-				fmt.Println(job)
 				err := s.repo.DeleteBatch(ctx, job.UserID, job.URLs)
 				if err != nil {
 					return err
@@ -102,8 +92,8 @@ func (s *Service) DeleteURLList(ctx context.Context, userID uint32, checksums []
 		UserID: userID,
 		URLs:   list,
 	}
-	fmt.Println(job)
-	fmt.Println(job.URLs)
-	s.jobChDelete <- job
+	if s.jobChDelete != nil {
+		s.jobChDelete <- job
+	}
 	return nil
 }

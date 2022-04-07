@@ -42,7 +42,7 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 		err = h.service.GetRepo().SetURL(ctx, userID, url)
 		if err != nil {
 			var labelErr *labelError.LabelError
-			if !errors.As(err, &labelErr) || labelErr.Label != "CONFLICT" {
+			if !errors.As(err, &labelErr) || labelErr.Label != labelError.TypeConflict {
 				http.Error(w, "Invalid request 10", http.StatusBadRequest)
 				return
 			}
@@ -88,7 +88,7 @@ func (h *Handler) SetURL() http.HandlerFunc {
 		err = h.service.GetRepo().SetURL(ctx, userID, urlPair)
 		if err != nil {
 			var labelErr *labelError.LabelError
-			if !errors.As(err, &labelErr) || labelErr.Label != "CONFLICT" {
+			if !errors.As(err, &labelErr) || labelErr.Label != labelError.TypeConflict {
 				http.Error(w, "Invalid request 10", http.StatusBadRequest)
 				return
 			}

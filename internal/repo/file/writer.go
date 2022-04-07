@@ -22,8 +22,8 @@ func NewWriter(filePath string) (*Writer, error) {
 	}, nil
 }
 
-func (w *Writer) WriteURL(url *entity.URL) error {
-	return w.encoder.Encode(url)
+func (w *Writer) WriteRecord(record *entity.Record) error {
+	return w.encoder.Encode(record)
 }
 func (w *Writer) Close() error {
 	return w.file.Close()

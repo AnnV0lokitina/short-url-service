@@ -4,58 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/repo/file"
 	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 )
-
-type Repo struct {
-	list    map[string]string
-	userLog map[uint32][]*entity.URL
-	writer  *file.Writer
-}
-
-func createFilledList(filePath string) (*map[string]string, error) {
-	reader, err := file.NewReader(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer reader.Close()
-
-	list := make(map[string]string)
-	for reader.HasNext() {
-		url, err := reader.ReadURL()
-		if err != nil {
-			continue
-		}
-		list[url.Short] = url.Original
-	}
-	return &list, nil
-}
-
-func NewFileRepo(filePath string) (*Repo, error) {
-	list, err := createFilledList(filePath)
-	if err != nil {
-		return nil, err
-	}
-	writer, err := file.NewWriter(filePath)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Repo{
-		list:    *list,
-		userLog: make(map[uint32][]*entity.URL),
-		writer:  writer,
-	}, nil
-}
-
-func NewMemoryRepo() *Repo {
-	return &Repo{
-		list:    make(map[string]string),
-		userLog: make(map[uint32][]*entity.URL),
-		writer:  nil,
-	}
-}
 
 func (r *Repo) PingBD(_ context.Context) bool {
 	return false
@@ -69,38 +19,49 @@ func (r *Repo) Close(_ context.Context) error {
 }
 
 func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
+	record := &entity.Record{
+		ShortURL:    url.Short,
+		OriginalURL: url.Original,
+		UserID:      userID,
+		Deleted:     false,
+	}
 	if r.writer != nil {
-		if err := r.writer.WriteURL(url); err != nil {
+		if err := r.writer.WriteRecord(record); err != nil {
 			return err
 		}
 	}
-	_, exists := r.userLog[userID]
-	if !exists {
-		r.userLog[userID] = make([]*entity.URL, 0)
-	}
-	r.userLog[userID] = append(r.userLog[userID], url)
-	r.list[url.Short] = url.Original
+	r.rows[url.Short] = record
 	return nil
 }
 
 func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
-	originalURL, ok := r.list[shortURL]
+	record, ok := r.rows[shortURL]
 	if !ok {
 		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
 	url := &entity.URL{
-		Short:    shortURL,
-		Original: originalURL,
+		Short:    record.ShortURL,
+		Original: record.OriginalURL,
 	}
 	return url, nil
 }
 
 func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
-	log, ok := r.userLog[id]
-	if !ok {
+	userLog := make([]*entity.URL, 0, len(r.rows))
+	for _, row := range r.rows {
+		if id != row.UserID {
+			continue
+		}
+		userLog = append(userLog, &entity.URL{
+			Short:    row.ShortURL,
+			Original: row.OriginalURL,
+		})
+	}
+	logLength := len(userLog)
+	if logLength <= 0 {
 		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
-	return log, nil
+	return userLog[:logLength:logLength], nil
 }
 
 func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {

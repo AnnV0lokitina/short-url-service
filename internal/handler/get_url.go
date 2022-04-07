@@ -22,7 +22,7 @@ func (h *Handler) GetURL() http.HandlerFunc {
 			return
 		}
 		var labelErr *labelError.LabelError
-		if errors.As(err, &labelErr) && labelErr.Label == "GONE" {
+		if errors.As(err, &labelErr) && labelErr.Label == labelError.TypeGone {
 			w.WriteHeader(http.StatusGone)
 			return
 		}

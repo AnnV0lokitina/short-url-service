@@ -31,7 +31,7 @@ func TestNewMemoryRepo(t *testing.T) {
 		{
 			name: "test new repo positive",
 			want: &Repo{
-				list:   make(map[string]string),
+				rows:   make(map[string]*entity.Record),
 				writer: nil,
 			},
 		},
@@ -73,12 +73,18 @@ func TestNewFileRepo(t *testing.T) {
 		{
 			name: "test new repo positive",
 			args: &args{
-				filePath:    testDir + testReaderFileName,
-				fileContent: "{\"checksum\":\"checksum\",\"full_url\":\"full\"}\n",
+				filePath: testDir + testReaderFileName,
+				fileContent: "{\"user_id\":1234,\"deleted:\":false,\"short_url\":\"server/checksum\"," +
+					"\"original_url\":\"full\"}\n",
 			},
 			want: want{
 				repo: &Repo{
-					list: map[string]string{"checksum": "full"},
+					rows: map[string]*entity.Record{"short_url": &entity.Record{
+						ShortURL:    "server/checksum",
+						OriginalURL: "full",
+						UserID:      1234,
+						Deleted:     false,
+					}},
 				},
 				listLength: 1,
 			},
@@ -96,7 +102,7 @@ func TestNewFileRepo(t *testing.T) {
 			got, err := NewFileRepo(tt.args.filePath)
 			require.NoError(t, err)
 			assert.ObjectsAreEqual(got, tt.want)
-			assert.Equal(t, len(got.list), 1, "NewRepo(nil)")
+			assert.Equal(t, len(got.rows), 1, "NewRepo(nil)")
 			os.Remove(tt.args.filePath)
 		})
 	}
@@ -106,15 +112,20 @@ func TestNewFileRepo(t *testing.T) {
 
 func TestRepo_GetURL(t *testing.T) {
 	type fields struct {
-		list map[string]string
+		list map[string]*entity.Record
 	}
 	type args struct {
 		shortURL string
 	}
 
 	url := entity.NewURL(urlFullString, shortURLHost)
-	list := make(map[string]string)
-	list[url.Short] = url.Original
+	list := make(map[string]*entity.Record)
+	list[url.Short] = &entity.Record{
+		OriginalURL: url.Original,
+		ShortURL:    url.Short,
+		UserID:      1234,
+		Deleted:     false,
+	}
 
 	tests := []struct {
 		name   string
@@ -160,7 +171,7 @@ func TestRepo_GetURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Repo{
-				list: tt.fields.list,
+				rows: tt.fields.list,
 			}
 			got, err := r.GetURL(context.TODO(), tt.args.shortURL)
 			if tt.found {
@@ -173,8 +184,7 @@ func TestRepo_GetURL(t *testing.T) {
 
 func TestRepo_SetURL(t *testing.T) {
 	type fields struct {
-		list    map[string]string
-		userLog map[uint32][]*entity.URL
+		rows map[string]*entity.Record
 	}
 	type args struct {
 		url      *entity.URL
@@ -193,8 +203,7 @@ func TestRepo_SetURL(t *testing.T) {
 		{
 			name: "test set url positive",
 			fields: fields{
-				list:    make(map[string]string),
-				userLog: make(map[uint32][]*entity.URL),
+				rows: make(map[string]*entity.Record),
 			},
 			args: args{
 				url:      url,
@@ -207,8 +216,7 @@ func TestRepo_SetURL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Repo{
-				list:    tt.fields.list,
-				userLog: tt.fields.userLog,
+				rows: tt.fields.rows,
 			}
 			err := r.SetURL(context.TODO(), tt.args.userID, tt.args.url)
 			require.NoError(t, err)
@@ -221,24 +229,20 @@ func TestRepo_SetURL(t *testing.T) {
 
 			assert.Equal(t, tt.args.url.Short, receiveURL.Short)
 			assert.Equal(t, tt.args.url.Original, receiveURL.Original)
-
-			assert.Equal(t, len(r.userLog[tt.args.userID]), 1)
-			assert.ObjectsAreEqual(tt.args.url, r.userLog[tt.args.userID][0])
 		})
 	}
 }
 
 func TestRepo_GetUserURLList(t *testing.T) {
 	type input struct {
-		userLog map[uint32][]*entity.URL
-		userID  uint32
+		rows   map[string]*entity.Record
+		userID uint32
 	}
-	userLog := make(map[uint32][]*entity.URL)
-	userLog[1234] = []*entity.URL{
-		&entity.URL{
-			Short:    "short",
-			Original: "original",
-		},
+	rows := make(map[string]*entity.Record)
+	rows["short"] = &entity.Record{
+		ShortURL:    "short",
+		OriginalURL: "original",
+		UserID:      1234,
 	}
 	tests := []struct {
 		name  string
@@ -249,8 +253,8 @@ func TestRepo_GetUserURLList(t *testing.T) {
 		{
 			name: "test get urls",
 			input: input{
-				userLog: userLog,
-				userID:  1234,
+				rows:   rows,
+				userID: 1234,
 			},
 			want: []*entity.URL{
 				&entity.URL{
@@ -263,8 +267,8 @@ func TestRepo_GetUserURLList(t *testing.T) {
 		{
 			name: "test get urls",
 			input: input{
-				userLog: userLog,
-				userID:  12345,
+				rows:   rows,
+				userID: 12345,
 			},
 			want:  nil,
 			want1: false,
@@ -273,7 +277,7 @@ func TestRepo_GetUserURLList(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := &Repo{
-				userLog: tt.input.userLog,
+				rows: tt.input.rows,
 			}
 			got, err := r.GetUserURLList(context.TODO(), tt.input.userID)
 			assert.Equalf(t, tt.want, got, "GetUserURLList(%v)", tt.input.userID)

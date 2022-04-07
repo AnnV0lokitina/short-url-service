@@ -26,12 +26,12 @@ func (r *Reader) HasNext() bool {
 	return r.decoder.More()
 }
 
-func (r *Reader) ReadURL() (*entity.URL, error) {
-	var url entity.URL
-	if err := r.decoder.Decode(&url); err != nil {
+func (r *Reader) ReadRecord() (*entity.Record, error) {
+	var record entity.Record
+	if err := r.decoder.Decode(&record); err != nil {
 		return nil, err
 	}
-	return &url, nil
+	return &record, nil
 }
 func (r *Reader) Close() error {
 	return r.file.Close()

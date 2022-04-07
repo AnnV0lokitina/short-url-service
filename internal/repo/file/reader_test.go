@@ -19,13 +19,13 @@ func TestNewReader(t *testing.T) {
 	}
 	type resultInterface interface {
 		HasNext() bool
-		ReadURL() (*entity.URL, error)
+		ReadRecord() (*entity.Record, error)
 		Close() error
 	}
 	type want struct {
 		resultType      string
 		interfaceObject interface{}
-		url             *entity.URL
+		record          *entity.Record
 	}
 	tmpDir := os.TempDir()
 	testDir, err := os.MkdirTemp(tmpDir, "test")
@@ -42,15 +42,18 @@ func TestNewReader(t *testing.T) {
 		{
 			name: "new reader positive",
 			args: args{
-				filePath:    testDir + testReaderFileName,
-				fileContent: "{\"short_url\":\"server/checksum\",\"original_url\":\"full\"}\n",
+				filePath: testDir + testReaderFileName,
+				fileContent: "{\"user_id\":1234,\"deleted:\":false,\"short_url\":\"server/checksum\"," +
+					"\"original_url\":\"full\"}\n",
 			},
 			want: want{
 				resultType:      "*file.Reader",
 				interfaceObject: (*resultInterface)(nil),
-				url: &entity.URL{
-					Short:    "server/checksum",
-					Original: "full",
+				record: &entity.Record{
+					UserID:      1234,
+					Deleted:     false,
+					ShortURL:    "server/checksum",
+					OriginalURL: "full",
 				},
 			},
 			wantCreateErr: assert.NoError,
@@ -74,11 +77,11 @@ func TestNewReader(t *testing.T) {
 			assert.Equalf(t, tt.want.resultType, reflect.TypeOf(r).String(), "NewReader(%v)", tt.args.filePath)
 			assert.Implements(t, tt.want.interfaceObject, r, "Invalid reader interface")
 			assert.Equalf(t, true, r.HasNext(), "HasNext()")
-			url, err := r.ReadURL()
+			url, err := r.ReadRecord()
 			if !tt.wantURLErr(t, err, "ReadURL()") {
 				return
 			}
-			assert.Equalf(t, tt.want.url, url, "ReadURL()")
+			assert.Equalf(t, tt.want.record, url, "ReadURL()")
 			assert.Equalf(t, false, r.HasNext(), "HasNext()")
 			tt.wantCloseErr(t, r.Close(), "Close()")
 			os.Remove(tt.args.filePath)

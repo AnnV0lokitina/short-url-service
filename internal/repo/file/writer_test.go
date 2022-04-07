@@ -15,16 +15,16 @@ const testWriterFileName = "/test_writer"
 func TestNewWriter(t *testing.T) {
 	type args struct {
 		filePath string
-		url      *entity.URL
+		record   *entity.Record
 	}
 	type resultInterface interface {
-		WriteURL(url *entity.URL) error
+		WriteRecord(record *entity.Record) error
 		Close() error
 	}
 	type want struct {
 		resultType      string
 		interfaceObject interface{}
-		url             string
+		record          string
 	}
 	tmpDir := os.TempDir()
 	testDir, err := os.MkdirTemp(tmpDir, "test")
@@ -42,15 +42,18 @@ func TestNewWriter(t *testing.T) {
 			name: "create writer",
 			args: args{
 				filePath: testDir + testWriterFileName,
-				url: &entity.URL{
-					Short:    "server/checksum",
-					Original: "full",
+				record: &entity.Record{
+					UserID:      1234,
+					Deleted:     false,
+					ShortURL:    "server/checksum",
+					OriginalURL: "full",
 				},
 			},
 			want: want{
 				resultType:      "*file.Writer",
 				interfaceObject: (*resultInterface)(nil),
-				url:             "{\"short_url\":\"server/checksum\",\"original_url\":\"full\"}\n",
+				record: "{\"user_id\":1234,\"deleted\":false,\"short_url\":\"server/checksum\"," +
+					"\"original_url\":\"full\"}\n",
 			},
 			wantCreateErr: assert.NoError,
 			wantURLErr:    assert.NoError,
@@ -66,7 +69,7 @@ func TestNewWriter(t *testing.T) {
 			assert.Equalf(t, tt.want.resultType, reflect.TypeOf(w).String(), "NewWriter(%v)", tt.args.filePath)
 			assert.Implements(t, tt.want.interfaceObject, w, "Invalid writer interface")
 			assert.FileExistsf(t, tt.args.filePath, "file path %v", tt.args.filePath)
-			tt.wantURLErr(t, w.WriteURL(tt.args.url), fmt.Sprintf("WriteURL(%v)", tt.args.url))
+			tt.wantURLErr(t, w.WriteRecord(tt.args.record), fmt.Sprintf("WriteRecord(%v)", tt.args.record))
 			tt.wantCloseErr(t, w.Close(), "Close()")
 
 			file, err := os.Open(tt.args.filePath)
@@ -74,7 +77,7 @@ func TestNewWriter(t *testing.T) {
 			data := make([]byte, 100)
 			count, err := file.Read(data)
 			require.NoError(t, err)
-			assert.Equalf(t, tt.want.url, string(data[:count]), "WriteURL(%v)", tt.args.url)
+			assert.Equalf(t, tt.want.record, string(data[:count]), "WriteURL(%v)", tt.args.record)
 			err = file.Close()
 			require.NoError(t, err)
 			os.Remove(tt.args.filePath)

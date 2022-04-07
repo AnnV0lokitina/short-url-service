@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/stretchr/testify/mock"
 )
@@ -24,5 +25,6 @@ func (s *MockedService) GetRepo() Repo {
 	return repo
 }
 
-func (s *MockedService) DeleteURLList(_ uint32, _ []string) {
+func (s *MockedService) DeleteURLList(ctx context.Context, _ uint32, _ []string) error {
+	return nil
 }

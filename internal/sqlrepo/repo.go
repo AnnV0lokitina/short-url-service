@@ -160,7 +160,7 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 	return nil
 }
 
-func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, list []string) error {
+func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, listShortURL []string) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -181,7 +181,7 @@ func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, list []string) er
 	}
 
 	batch := &pgx.Batch{}
-	for _, shortURL := range list {
+	for _, shortURL := range listShortURL {
 		batch.Queue("delete", true, shortURL, userID)
 	}
 
@@ -195,7 +195,7 @@ func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, list []string) er
 	return nil
 }
 
-func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error) {
+func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, listShortURL []string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
 
@@ -211,15 +211,15 @@ func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, list []string)
 	}
 
 	batch := &pgx.Batch{}
-	queryCount := len(list)
+	queryCount := len(listShortURL)
 
-	for _, shortURL := range list {
+	for _, shortURL := range listShortURL {
 		batch.Queue("query", shortURL, false, userID)
 	}
 
 	br := r.conn.SendBatch(ctx, batch)
 
-	shortURLs := make([]string, 0, len(list))
+	shortURLs := make([]string, 0, len(listShortURL))
 	for i := 0; i < queryCount; i++ {
 		rows, err := br.Query()
 		if err != nil {

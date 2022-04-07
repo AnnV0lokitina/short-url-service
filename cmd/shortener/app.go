@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -28,25 +27,16 @@ func (app *App) Run(ctx context.Context, serverAddress string) error {
 		graceCtx, graceCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer graceCancel()
 
-		fmt.Println("graceCancel")
-
 		if err := server.Shutdown(graceCtx); err != nil {
-			fmt.Println("err")
-			fmt.Println(err)
-			log.Fatal(err)
+			log.Println(err)
 		}
-		fmt.Println(httpShutdownCh)
 		httpShutdownCh <- struct{}{}
 	}()
 
 	err := server.ListenAndServe()
 	<-httpShutdownCh
-	fmt.Println("before ErrServerClosed")
 	if err == http.ErrServerClosed {
-		fmt.Println("ErrServerClosed")
 		return nil
 	}
-	fmt.Println("NO ErrServerClosed")
-	fmt.Println(err)
 	return err
 }

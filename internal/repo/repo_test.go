@@ -2,7 +2,9 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -119,6 +121,7 @@ func TestRepo_GetURL(t *testing.T) {
 	}
 
 	url := entity.NewURL(urlFullString, shortURLHost)
+	deletedUrl := entity.NewURL("deleted_full", shortURLHost)
 	list := make(map[string]*entity.Record)
 	list[url.Short] = &entity.Record{
 		OriginalURL: url.Original,
@@ -126,13 +129,20 @@ func TestRepo_GetURL(t *testing.T) {
 		UserID:      1234,
 		Deleted:     false,
 	}
+	list[deletedUrl.Short] = &entity.Record{
+		OriginalURL: deletedUrl.Original,
+		ShortURL:    deletedUrl.Short,
+		UserID:      12345,
+		Deleted:     true,
+	}
 
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   *entity.URL
-		found  bool
+		name    string
+		fields  fields
+		args    args
+		want    *entity.URL
+		found   bool
+		errType string
 	}{
 		{
 			name: "test repo get url",
@@ -153,8 +163,9 @@ func TestRepo_GetURL(t *testing.T) {
 			args: args{
 				shortURL: "invalid url",
 			},
-			want:  url,
-			found: false,
+			want:    url,
+			found:   false,
+			errType: labelError.TypeNotFound,
 		},
 		{
 			name: "test repo get url error (empty uuid)",
@@ -164,8 +175,21 @@ func TestRepo_GetURL(t *testing.T) {
 			args: args{
 				shortURL: "",
 			},
-			want:  url,
-			found: false,
+			want:    url,
+			found:   false,
+			errType: labelError.TypeNotFound,
+		},
+		{
+			name: "test repo get deleted url",
+			fields: fields{
+				list: list,
+			},
+			args: args{
+				shortURL: deletedUrl.Short,
+			},
+			want:    deletedUrl,
+			found:   false,
+			errType: labelError.TypeGone,
 		},
 	}
 	for _, tt := range tests {
@@ -176,6 +200,13 @@ func TestRepo_GetURL(t *testing.T) {
 			got, err := r.GetURL(context.TODO(), tt.args.shortURL)
 			if tt.found {
 				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				if tt.errType != "" {
+					var labelErr *labelError.LabelError
+					assert.True(t, errors.As(err, &labelErr))
+					assert.Equal(t, labelErr.Label, tt.errType)
+				}
 			}
 			assert.ObjectsAreEqual(got, tt.want)
 		})
@@ -243,6 +274,7 @@ func TestRepo_GetUserURLList(t *testing.T) {
 		ShortURL:    "short",
 		OriginalURL: "original",
 		UserID:      1234,
+		Deleted:     false,
 	}
 	tests := []struct {
 		name  string
@@ -286,4 +318,50 @@ func TestRepo_GetUserURLList(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRepo_DeleteBatch(t *testing.T) {
+	rows := make(map[string]*entity.Record)
+	rows["to_delete"] = &entity.Record{
+		ShortURL:    "to_delete",
+		OriginalURL: "original",
+		UserID:      1234,
+		Deleted:     false,
+	}
+	rows["not_delete"] = &entity.Record{
+		ShortURL:    "not_delete",
+		OriginalURL: "original",
+		UserID:      12345,
+		Deleted:     false,
+	}
+	repo := &Repo{
+		rows: rows,
+	}
+	list := []string{"to_delete", "not_delete"}
+	repo.DeleteBatch(context.TODO(), 1234, list)
+	assert.True(t, rows["to_delete"].Deleted)
+	assert.False(t, rows["not_delete"].Deleted)
+}
+
+func TestRepo_CheckUserBatch(t *testing.T) {
+	rows := make(map[string]*entity.Record)
+	rows["to_delete"] = &entity.Record{
+		ShortURL:    "to_delete",
+		OriginalURL: "original",
+		UserID:      1234,
+		Deleted:     false,
+	}
+	rows["not_delete"] = &entity.Record{
+		ShortURL:    "not_delete",
+		OriginalURL: "original",
+		UserID:      12345,
+		Deleted:     false,
+	}
+	repo := &Repo{
+		rows: rows,
+	}
+	list := []string{"to_delete", "not_delete"}
+	resultList, _ := repo.CheckUserBatch(context.TODO(), 1234, list)
+	assert.Equal(t, 1, len(resultList))
+	assert.Equal(t, "to_delete", list[0])
 }

@@ -44,7 +44,6 @@ func (r *MockedRepo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL
 	if tmpUserID == id {
 		return tmpURLList, nil
 	}
-	// fmt.Println(id)
 	if id == 1234 {
 		return []*entity.URL{
 			&entity.URL{

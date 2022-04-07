@@ -39,6 +39,9 @@ func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
 	if !ok {
 		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
+	if record.Deleted {
+		return nil, labelError.NewLabelError(labelError.TypeGone, errors.New("URL deleted"))
+	}
 	url := &entity.URL{
 		Short:    record.ShortURL,
 		Original: record.OriginalURL,
@@ -74,10 +77,23 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 	return nil
 }
 
-func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, list []string) error {
+func (r *Repo) DeleteBatch(_ context.Context, userID uint32, listShortURL []string) error {
+	for _, shortURL := range listShortURL {
+		record, ok := r.rows[shortURL]
+		if ok && record.UserID == userID {
+			r.rows[shortURL].Deleted = true
+		}
+	}
 	return nil
 }
 
-func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error) {
-	return nil, nil
+func (r *Repo) CheckUserBatch(_ context.Context, userID uint32, listShortURL []string) ([]string, error) {
+	resultList := make([]string, 0, len(listShortURL))
+	for _, shortURL := range listShortURL {
+		record, ok := r.rows[shortURL]
+		if ok && record.UserID == userID {
+			resultList = append(resultList, shortURL)
+		}
+	}
+	return resultList, nil
 }

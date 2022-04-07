@@ -68,7 +68,6 @@ func (h *Handler) SetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
 		userID, err := authorizeUserAndSetCookie(w, r)
-		// fmt.Println(userID)
 		if err != nil {
 			http.Error(w, "Create user error", http.StatusBadRequest)
 			return

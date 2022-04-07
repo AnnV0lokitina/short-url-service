@@ -14,8 +14,8 @@ type Repo interface {
 	PingBD(ctx context.Context) bool
 	Close(context.Context) error
 	AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error
-	DeleteBatch(ctx context.Context, userID uint32, list []string) error
-	CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error)
+	DeleteBatch(ctx context.Context, userID uint32, listShortURL []string) error
+	CheckUserBatch(ctx context.Context, userID uint32, listShortURL []string) ([]string, error)
 }
 
 type Service struct {

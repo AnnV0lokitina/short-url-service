@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
@@ -38,7 +37,6 @@ func main() {
 	application := NewApp(handler)
 
 	go func() {
-		fmt.Println("start")
 		service.CreateDeleteWorkerPull(ctx, nOfWorkers)
 	}()
 

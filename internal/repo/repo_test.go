@@ -121,7 +121,7 @@ func TestRepo_GetURL(t *testing.T) {
 	}
 
 	url := entity.NewURL(urlFullString, shortURLHost)
-	deletedUrl := entity.NewURL("deleted_full", shortURLHost)
+	deletedURL := entity.NewURL("deleted_full", shortURLHost)
 	list := make(map[string]*entity.Record)
 	list[url.Short] = &entity.Record{
 		OriginalURL: url.Original,
@@ -129,9 +129,9 @@ func TestRepo_GetURL(t *testing.T) {
 		UserID:      1234,
 		Deleted:     false,
 	}
-	list[deletedUrl.Short] = &entity.Record{
-		OriginalURL: deletedUrl.Original,
-		ShortURL:    deletedUrl.Short,
+	list[deletedURL.Short] = &entity.Record{
+		OriginalURL: deletedURL.Original,
+		ShortURL:    deletedURL.Short,
 		UserID:      12345,
 		Deleted:     true,
 	}
@@ -185,9 +185,9 @@ func TestRepo_GetURL(t *testing.T) {
 				list: list,
 			},
 			args: args{
-				shortURL: deletedUrl.Short,
+				shortURL: deletedURL.Short,
 			},
-			want:    deletedUrl,
+			want:    deletedURL,
 			found:   false,
 			errType: labelError.TypeGone,
 		},

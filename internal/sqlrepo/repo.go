@@ -22,8 +22,8 @@ type PgxIface interface {
 }
 
 type Repo struct {
-	//conn PgxIface // *pgx.Conn
-	conn *pgx.Conn
+	conn PgxIface // *pgx.Conn
+	//conn *pgx.Conn
 }
 
 func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {

@@ -289,7 +289,7 @@ func TestRepo_GetUserURLList(t *testing.T) {
 				userID: 1234,
 			},
 			want: []*entity.URL{
-				&entity.URL{
+				{
 					Short:    "short",
 					Original: "original",
 				},

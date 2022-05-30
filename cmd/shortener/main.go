@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"fmt"
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
+	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
+	"runtime/pprof"
 	"syscall"
 )
 
@@ -44,6 +47,18 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmem, err := os.Create(`../../profiles/result123.pprof`)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer fmem.Close()
+
+	runtime.GC() // получаем статистику по использованию памяти
+
+	if err := pprof.WriteHeapProfile(fmem); err != nil {
+		fmt.Println(err)
+	}
 }
 
 func initRepo(ctx context.Context, cfg *config) (service.Repo, error) {
@@ -55,11 +70,11 @@ func initRepo(ctx context.Context, cfg *config) (service.Repo, error) {
 		return repository, nil
 	}
 	if cfg.FileStoragePath != "" {
-		repository, err := repo.NewFileRepo(cfg.FileStoragePath)
+		repository, err := repoPkg.NewFileRepo(cfg.FileStoragePath)
 		if err != nil {
 			return nil, err
 		}
 		return repository, nil
 	}
-	return repo.NewMemoryRepo(), nil
+	return repoPkg.NewMemoryRepo(), nil
 }

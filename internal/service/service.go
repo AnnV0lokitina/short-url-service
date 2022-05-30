@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"golang.org/x/sync/errgroup"
 	"log"
@@ -57,7 +58,8 @@ func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
 			for job := range s.jobChDelete {
 				err := s.repo.DeleteBatch(ctx, job.UserID, job.URLs)
 				if err != nil {
-					return err
+					fmt.Println(err.Error())
+					continue
 				}
 			}
 			return nil

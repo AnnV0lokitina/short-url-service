@@ -43,7 +43,7 @@ func (io *JSONItemResponse) fromBatchURLItem(item *entity.BatchURLItem) {
 
 // JSONListToURLList конвертация полученых данных объекты приложения
 func JSONListToURLList(itemInputList []JSONItemRequest, serverAddress string) []*entity.BatchURLItem {
-	list := make([]*entity.BatchURLItem, 0)
+	list := make([]*entity.BatchURLItem, 0, len(itemInputList))
 	for _, item := range itemInputList {
 		urlItem := item.toBatchURLItem(serverAddress)
 		list = append(list, urlItem)
@@ -53,7 +53,7 @@ func JSONListToURLList(itemInputList []JSONItemRequest, serverAddress string) []
 
 // URLListTOJSONList объектов приложения в формат вывода
 func URLListTOJSONList(list []*entity.BatchURLItem) []JSONItemResponse {
-	outputList := make([]JSONItemResponse, 0)
+	outputList := make([]JSONItemResponse, 0, len(list))
 	for _, item := range list {
 		i := &JSONItemResponse{}
 		i.fromBatchURLItem(item)
@@ -61,16 +61,3 @@ func URLListTOJSONList(list []*entity.BatchURLItem) []JSONItemResponse {
 	}
 	return outputList
 }
-
-//type JSONIDListRequest []string
-//
-//func JSONIDListToURLList(inputList JSONIDListRequest, serverAddress string) []*entity.URL {
-//	list := make([]*entity.URL, 0)
-//	for _, checksum := range inputList {
-//		urlItem := &entity.URL{
-//			Short: entity.CreateShortURL(checksum, serverAddress),
-//		}
-//		list = append(list, urlItem)
-//	}
-//	return list
-//}

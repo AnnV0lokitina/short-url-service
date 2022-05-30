@@ -8,7 +8,7 @@ import (
 )
 
 func (r *Repo) PingBD(_ context.Context) bool {
-	return false
+	return true
 }
 
 func (r *Repo) Close(_ context.Context) error {

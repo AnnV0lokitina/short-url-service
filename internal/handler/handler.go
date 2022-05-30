@@ -2,10 +2,12 @@ package handler
 
 import (
 	"context"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/pprof"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
 )
 
 const (

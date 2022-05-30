@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"net/http"
+
+	"github.com/go-chi/chi/v5"
+
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
-	"github.com/go-chi/chi/v5"
-	"net/http"
 )
 
 func (h *Handler) GetURL() http.HandlerFunc {

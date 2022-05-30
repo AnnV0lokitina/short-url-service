@@ -3,11 +3,13 @@ package sqlrepo
 import (
 	"context"
 	"errors"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
+	"time"
+
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"time"
+
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 )
 
 var dbPingTimeout = 1 * time.Second

@@ -2,8 +2,9 @@ package file
 
 import (
 	"encoding/json"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"os"
+
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 )
 
 type Reader struct {

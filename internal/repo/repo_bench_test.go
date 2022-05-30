@@ -2,8 +2,9 @@ package repo
 
 import (
 	"context"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	"testing"
+
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 )
 
 func BenchmarkRepo_GetURL(b *testing.B) {

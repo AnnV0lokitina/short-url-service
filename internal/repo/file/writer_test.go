@@ -2,12 +2,14 @@ package file
 
 import (
 	"fmt"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 )
 
 const testWriterFileName = "/test_writer"

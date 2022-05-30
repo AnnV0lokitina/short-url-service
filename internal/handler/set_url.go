@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 	"io"
 	"net/http"
 	netUrl "net/url"
+
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 )
 
 func (h *Handler) SetURLFromJSON() http.HandlerFunc {

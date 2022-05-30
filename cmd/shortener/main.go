@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
-	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
-	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
 	"log"
 	"os"
 	"os/signal"
 	"runtime"
 	"runtime/pprof"
 	"syscall"
+
+	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
+	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
+	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
+	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
 )
 
 const nOfWorkers = 3

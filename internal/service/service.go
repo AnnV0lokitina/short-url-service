@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"golang.org/x/sync/errgroup"
 	"log"
+
+	"golang.org/x/sync/errgroup"
+
+	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 )
 
 type Repo interface {

@@ -27,9 +27,9 @@ func ExampleHandler_ShortenBatch() {
 	h.ShortenBatch().ServeHTTP(w, req)
 
 	fmt.Println(w.Result().StatusCode)
-	defer w.Result().Body.Close()
 	resBody, _ := io.ReadAll(w.Result().Body)
 	fmt.Println(string(resBody))
+	w.Result().Body.Close()
 
 	// Output:
 	// 201

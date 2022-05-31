@@ -25,6 +25,7 @@ func ExampleHandler_DeleteBatch() {
 	h.DeleteBatch().ServeHTTP(w, req)
 
 	fmt.Println(w.Result().StatusCode)
+	w.Result().Body.Close()
 
 	// Output:
 	// 202

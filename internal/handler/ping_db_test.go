@@ -23,6 +23,7 @@ func ExampleHandler_PingDB() {
 	h.PingDB().ServeHTTP(w, req)
 
 	fmt.Println(w.Result().StatusCode)
+	w.Result().Body.Close()
 
 	// Output:
 	// 200

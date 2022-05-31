@@ -29,6 +29,7 @@ func ExampleHandler_GetURL() {
 	w = httptest.NewRecorder()
 	h.GetURL().ServeHTTP(w, req)
 
+	defer w.Result().Body.Close()
 	fmt.Println(w.Result().StatusCode)
 	fmt.Println(w.Result().Header.Get("Location"))
 
@@ -50,6 +51,7 @@ func ExampleHandler_GetUserURLList() {
 	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)
 	w := httptest.NewRecorder()
 	h.SetURL().ServeHTTP(w, req)
+	defer w.Result().Body.Close()
 	cookies := w.Result().Cookies()
 
 	sendBody = strings.NewReader("fullURL1")
@@ -66,11 +68,12 @@ func ExampleHandler_GetUserURLList() {
 	}
 	w = httptest.NewRecorder()
 	h.GetUserURLList().ServeHTTP(w, req)
+	w.Result().Body.Close()
 
 	fmt.Println(w.Result().StatusCode)
-	defer w.Result().Body.Close()
 	resBody, _ := io.ReadAll(w.Result().Body)
 	fmt.Println(string(resBody))
+	w.Result().Body.Close()
 
 	// Output:
 	// 200

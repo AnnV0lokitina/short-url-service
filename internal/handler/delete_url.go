@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// DeleteBatch Delete list of urls, added by user.
 func (h *Handler) DeleteBatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

@@ -12,6 +12,7 @@ import (
 	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 )
 
+// SetURLFromJSON Get URL to shorten in json format.
 func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
@@ -65,6 +66,7 @@ func (h *Handler) SetURLFromJSON() http.HandlerFunc {
 	}
 }
 
+// SetURL Get URL to shorten in plain text format.
 func (h *Handler) SetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

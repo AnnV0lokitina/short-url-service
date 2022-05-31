@@ -8,10 +8,12 @@ import (
 	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
 )
 
+// PingBD Show that database is available.
 func (r *Repo) PingBD(_ context.Context) bool {
 	return true
 }
 
+// Close Closes file writer if information stored in file.
 func (r *Repo) Close(_ context.Context) error {
 	if r.writer != nil {
 		return r.writer.Close()
@@ -19,6 +21,7 @@ func (r *Repo) Close(_ context.Context) error {
 	return nil
 }
 
+// SetURL Save url information to storage.
 func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
 	record := &entity.Record{
 		ShortURL:    url.Short,
@@ -35,6 +38,7 @@ func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
 	return nil
 }
 
+// GetURL Get url information from storage.
 func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
 	record, ok := r.rows[shortURL]
 	if !ok {
@@ -50,6 +54,7 @@ func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
 	return url, nil
 }
 
+// GetUserURLList Get list of urls, created by user, from storage
 func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
 	userLog := make([]*entity.URL, 0, len(r.rows))
 	for _, row := range r.rows {
@@ -68,6 +73,7 @@ func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, erro
 	return userLog[:logLength:logLength], nil
 }
 
+// AddBatch Save to storage list of urls.
 func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
 	for _, item := range list {
 		err := r.SetURL(ctx, userID, item.URL)
@@ -78,6 +84,7 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 	return nil
 }
 
+// DeleteBatch Mark urls list like deleted.
 func (r *Repo) DeleteBatch(_ context.Context, userID uint32, listShortURL []string) error {
 	for _, shortURL := range listShortURL {
 		record, ok := r.rows[shortURL]
@@ -88,6 +95,7 @@ func (r *Repo) DeleteBatch(_ context.Context, userID uint32, listShortURL []stri
 	return nil
 }
 
+// CheckUserBatch Return only urls witch can be deleted by user.
 func (r *Repo) CheckUserBatch(_ context.Context, userID uint32, listShortURL []string) ([]string, error) {
 	resultList := make([]string, 0, len(listShortURL))
 	for _, shortURL := range listShortURL {

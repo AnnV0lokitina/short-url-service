@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -51,14 +50,14 @@ func main() {
 
 	fmem, err := os.Create(`../../profiles/result123.pprof`)
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 	defer fmem.Close()
 
 	runtime.GC() // получаем статистику по использованию памяти
 
 	if err := pprof.WriteHeapProfile(fmem); err != nil {
-		fmt.Println(err)
+		log.Println(err)
 	}
 }
 

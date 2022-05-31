@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// ShortenBatch Set URL batch to shorten in json format.
 func (h *Handler) ShortenBatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

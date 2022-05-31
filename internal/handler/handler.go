@@ -17,6 +17,7 @@ const (
 	encoding              = "gzip"
 )
 
+// Service declare interface if services
 type Service interface {
 	DeleteURLList(ctx context.Context, userID uint32, checksums []string) error
 	GetRepo() service.Repo
@@ -24,11 +25,13 @@ type Service interface {
 	SetBaseURL(baseURL string)
 }
 
+// Handler keep information to handle requests.
 type Handler struct {
 	*chi.Mux
 	service Service
 }
 
+// NewHandler Create new Handler.
 func NewHandler(service Service) *Handler {
 	h := &Handler{
 		Mux:     chi.NewMux(),
@@ -45,11 +48,6 @@ func NewHandler(service Service) *Handler {
 	h.Post("/api/shorten/batch", h.ShortenBatch())
 	h.Delete("/api/user/urls", h.DeleteBatch())
 
-	h.Get("/debug/pprof/", pprof.Index)
-	h.Get("/debug/pprof/cmdline", pprof.Cmdline)
-	h.Get("/debug/pprof/profile", pprof.Profile)
-	h.Get("/debug/pprof/symbol", pprof.Symbol)
-	h.Get("/debug/pprof/trace", pprof.Trace)
 	h.Get("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
 
 	h.MethodNotAllowed(h.ExecIfNotAllowed())
@@ -57,6 +55,7 @@ func NewHandler(service Service) *Handler {
 	return h
 }
 
+// ExecIfNotAllowed Executed if url is bad.
 func (h *Handler) ExecIfNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request 5", http.StatusBadRequest)

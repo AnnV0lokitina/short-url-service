@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"golang.org/x/sync/errgroup"
@@ -10,6 +9,7 @@ import (
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 )
 
+// Repo declare repository interface
 type Repo interface {
 	SetURL(ctx context.Context, userID uint32, url *entity.URL) error
 	GetURL(ctx context.Context, shortURL string) (*entity.URL, error)
@@ -21,17 +21,20 @@ type Repo interface {
 	CheckUserBatch(ctx context.Context, userID uint32, listShortURL []string) ([]string, error)
 }
 
+// Service keep information to execute application tasks.
 type Service struct {
 	baseURL     string
 	repo        Repo
 	jobChDelete chan *JobDelete
 }
 
+// JobDelete keep user and urls list to delete
 type JobDelete struct {
-	UserID uint32
-	URLs   []string
+	UserID uint32   // user identifier
+	URLs   []string // urls list
 }
 
+// NewService Create new Service struct.
 func NewService(baseURL string, repo Repo) *Service {
 	return &Service{
 		baseURL: baseURL,
@@ -39,18 +42,22 @@ func NewService(baseURL string, repo Repo) *Service {
 	}
 }
 
+// GetBaseURL Return the application base url.
 func (s *Service) GetBaseURL() string {
 	return s.baseURL
 }
 
+// SetBaseURL Set the application base url.
 func (s *Service) SetBaseURL(baseURL string) {
 	s.baseURL = baseURL
 }
 
+// GetRepo Return repository struct.
 func (s *Service) GetRepo() Repo {
 	return s.repo
 }
 
+// CreateDeleteWorkerPull Initialize pull of workers to delete urls list.
 func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
 	s.jobChDelete = make(chan *JobDelete)
 	g, _ := errgroup.WithContext(ctx)
@@ -60,7 +67,7 @@ func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
 			for job := range s.jobChDelete {
 				err := s.repo.DeleteBatch(ctx, job.UserID, job.URLs)
 				if err != nil {
-					fmt.Println(err.Error())
+					log.Println(err.Error())
 					continue
 				}
 			}
@@ -78,6 +85,7 @@ func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
 	}
 }
 
+// DeleteURLList Delete urls list, sent by user.
 func (s *Service) DeleteURLList(ctx context.Context, userID uint32, checksums []string) error {
 	list := make([]string, 0, len(checksums))
 	for _, checksum := range checksums {

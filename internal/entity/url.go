@@ -5,11 +5,13 @@ import (
 	"fmt"
 )
 
+// URL Stores a short and original url pair.
 type URL struct {
-	Short    string `json:"short_url"`
-	Original string `json:"original_url"`
+	Short    string `json:"short_url"`    // short url
+	Original string `json:"original_url"` // original url
 }
 
+// NewURL Create new URL structure.
 func NewURL(originalURL string, serverAddress string) *URL {
 	checksum := createChecksum(originalURL)
 	return &URL{
@@ -18,6 +20,7 @@ func NewURL(originalURL string, serverAddress string) *URL {
 	}
 }
 
+// CreateShortURL Create short url from checksum and server address
 func CreateShortURL(checksum string, serverAddress string) string {
 	return serverAddress + "/" + checksum
 }

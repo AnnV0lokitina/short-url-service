@@ -25,11 +25,12 @@ func ExampleHandler_ShortenBatch() {
 	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/shorten/batch", sendBody)
 	w := httptest.NewRecorder()
 	h.ShortenBatch().ServeHTTP(w, req)
+	res := w.Result()
+	defer res.Body.Close()
 
-	fmt.Println(w.Result().StatusCode)
-	resBody, _ := io.ReadAll(w.Result().Body)
+	fmt.Println(res.StatusCode)
+	resBody, _ := io.ReadAll(res.Body)
 	fmt.Println(string(resBody))
-	w.Result().Body.Close()
 
 	// Output:
 	// 201

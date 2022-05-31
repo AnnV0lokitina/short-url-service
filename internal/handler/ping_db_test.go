@@ -21,9 +21,10 @@ func ExampleHandler_PingDB() {
 	req := httptest.NewRequest(http.MethodGet, "http://localhost:8080/ping", nil)
 	w := httptest.NewRecorder()
 	h.PingDB().ServeHTTP(w, req)
+	res := w.Result()
+	defer res.Body.Close()
 
-	fmt.Println(w.Result().StatusCode)
-	w.Result().Body.Close()
+	fmt.Println(res.StatusCode)
 
 	// Output:
 	// 200

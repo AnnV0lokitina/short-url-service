@@ -68,12 +68,12 @@ func ExampleHandler_GetUserURLList() {
 	}
 	w = httptest.NewRecorder()
 	h.GetUserURLList().ServeHTTP(w, req)
-	w.Result().Body.Close()
+	res := w.Result()
+	defer res.Body.Close()
 
-	fmt.Println(w.Result().StatusCode)
-	resBody, _ := io.ReadAll(w.Result().Body)
+	fmt.Println(res.StatusCode)
+	resBody, _ := io.ReadAll(res.Body)
 	fmt.Println(string(resBody))
-	w.Result().Body.Close()
 
 	// Output:
 	// 200

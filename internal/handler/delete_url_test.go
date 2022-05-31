@@ -24,8 +24,9 @@ func ExampleHandler_DeleteBatch() {
 	w := httptest.NewRecorder()
 	h.DeleteBatch().ServeHTTP(w, req)
 
-	fmt.Println(w.Result().StatusCode)
-	w.Result().Body.Close()
+	res := w.Result()
+	defer res.Body.Close()
+	fmt.Println(res.StatusCode)
 
 	// Output:
 	// 202

@@ -24,11 +24,12 @@ func ExampleHandler_SetURL() {
 	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)
 	w := httptest.NewRecorder()
 	h.SetURL().ServeHTTP(w, req)
+	res := w.Result()
+	defer res.Body.Close()
 
-	fmt.Println(w.Result().StatusCode)
-	resBody, _ := io.ReadAll(w.Result().Body)
+	fmt.Println(res.StatusCode)
+	resBody, _ := io.ReadAll(res.Body)
 	fmt.Println(string(resBody))
-	w.Result().Body.Close()
 
 	// Output:
 	// 201
@@ -48,11 +49,12 @@ func ExampleHandler_SetURLFromJSON() {
 	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080/api/shorten", sendBody)
 	w := httptest.NewRecorder()
 	h.SetURLFromJSON().ServeHTTP(w, req)
+	res := w.Result()
+	defer res.Body.Close()
 
-	fmt.Println(w.Result().StatusCode)
-	resBody, _ := io.ReadAll(w.Result().Body)
+	fmt.Println(res.StatusCode)
+	resBody, _ := io.ReadAll(res.Body)
 	fmt.Println(string(resBody))
-	w.Result().Body.Close()
 
 	// Output:
 	// 201

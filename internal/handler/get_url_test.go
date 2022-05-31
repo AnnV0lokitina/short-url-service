@@ -28,10 +28,11 @@ func ExampleHandler_GetURL() {
 	req = httptest.NewRequest(http.MethodGet, "http://localhost:8080/27580c7e4c2c1de6435730c74bb9f8ca", sendBody)
 	w = httptest.NewRecorder()
 	h.GetURL().ServeHTTP(w, req)
+	res := w.Result()
 
-	defer w.Result().Body.Close()
-	fmt.Println(w.Result().StatusCode)
-	fmt.Println(w.Result().Header.Get("Location"))
+	defer res.Body.Close()
+	fmt.Println(res.StatusCode)
+	fmt.Println(res.Header.Get("Location"))
 
 	// Output:
 	// 307
@@ -51,8 +52,9 @@ func ExampleHandler_GetUserURLList() {
 	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)
 	w := httptest.NewRecorder()
 	h.SetURL().ServeHTTP(w, req)
-	defer w.Result().Body.Close()
-	cookies := w.Result().Cookies()
+	res := w.Result()
+	defer res.Body.Close()
+	cookies := res.Cookies()
 
 	sendBody = strings.NewReader("fullURL1")
 	req = httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)
@@ -68,11 +70,11 @@ func ExampleHandler_GetUserURLList() {
 	}
 	w = httptest.NewRecorder()
 	h.GetUserURLList().ServeHTTP(w, req)
-	res := w.Result()
-	defer res.Body.Close()
+	resCheck := w.Result()
+	defer resCheck.Body.Close()
 
-	fmt.Println(res.StatusCode)
-	resBody, _ := io.ReadAll(res.Body)
+	fmt.Println(resCheck.StatusCode)
+	resBody, _ := io.ReadAll(resCheck.Body)
 	fmt.Println(string(resBody))
 
 	// Output:

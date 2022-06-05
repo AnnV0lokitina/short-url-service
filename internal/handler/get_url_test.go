@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"time"
 )
 
 func ExampleHandler_GetURL() {
@@ -55,6 +56,8 @@ func ExampleHandler_GetUserURLList() {
 	res := w.Result()
 	defer res.Body.Close()
 	cookies := res.Cookies()
+
+	time.Sleep(10 * time.Millisecond)
 
 	sendBody = strings.NewReader("fullURL1")
 	req = httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)

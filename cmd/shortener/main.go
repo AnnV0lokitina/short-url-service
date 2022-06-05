@@ -3,21 +3,24 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
-	"runtime"
-	"runtime/pprof"
 	"syscall"
 
 	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
 	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
 	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
+	_ "net/http/pprof"
 )
 
 const nOfWorkers = 3
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	cfg := initConfig()
 	initParams(cfg)
 
@@ -46,18 +49,6 @@ func main() {
 	err = application.Run(ctx, cfg.ServerAddress)
 	if err != nil {
 		log.Fatal(err)
-	}
-
-	fmem, err := os.Create(`../../profiles/result123.pprof`)
-	if err != nil {
-		log.Println(err)
-	}
-	defer fmem.Close()
-
-	runtime.GC() // получаем статистику по использованию памяти
-
-	if err := pprof.WriteHeapProfile(fmem); err != nil {
-		log.Println(err)
 	}
 }
 

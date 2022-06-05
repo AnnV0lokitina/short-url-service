@@ -2,12 +2,9 @@ package handler
 
 import (
 	"context"
-	"net/http"
-	"net/http/pprof"
-
-	"github.com/go-chi/chi/v5"
-
 	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
+	"github.com/go-chi/chi/v5"
+	"net/http"
 )
 
 const (
@@ -47,8 +44,6 @@ func NewHandler(service Service) *Handler {
 	h.Get("/ping", h.PingDB())
 	h.Post("/api/shorten/batch", h.ShortenBatch())
 	h.Delete("/api/user/urls", h.DeleteBatch())
-
-	h.Get("/debug/pprof/heap", pprof.Handler("heap").ServeHTTP)
 
 	h.MethodNotAllowed(h.ExecIfNotAllowed())
 

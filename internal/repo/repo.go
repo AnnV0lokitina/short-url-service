@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"errors"
+	"sort"
 
 	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
 	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
@@ -56,21 +57,26 @@ func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
 
 // GetUserURLList Get list of urls, created by user, from storage
 func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
-	userLog := make([]*entity.URL, 0, len(r.rows))
-	for _, row := range r.rows {
+	keys := make([]string, 0, len(r.rows))
+	for k, row := range r.rows {
 		if id != row.UserID {
 			continue
 		}
-		userLog = append(userLog, &entity.URL{
-			Short:    row.ShortURL,
-			Original: row.OriginalURL,
-		})
+		keys = append(keys, k)
 	}
-	logLength := len(userLog)
+	sort.Strings(keys)
+	logLength := len(keys)
 	if logLength <= 0 {
 		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
-	return userLog[:logLength:logLength], nil
+	userLog := make([]*entity.URL, 0, logLength)
+	for _, k := range keys {
+		userLog = append(userLog, &entity.URL{
+			Short:    r.rows[k].ShortURL,
+			Original: r.rows[k].OriginalURL,
+		})
+	}
+	return userLog, nil
 }
 
 // AddBatch Save to storage list of urls.

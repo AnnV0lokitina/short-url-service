@@ -1,4 +1,4 @@
-package repo_array
+package repoarray
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package mocked_repo
+package mockedrepo
 
 import (
 	"context"

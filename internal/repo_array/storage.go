@@ -1,4 +1,4 @@
-package repo_array
+package repoarray
 
 import (
 	"github.com/AnnV0lokitina/short-url-service/internal/entity"

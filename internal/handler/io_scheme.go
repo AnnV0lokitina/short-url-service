@@ -3,7 +3,7 @@ package handler
 // файл содержит описание схем (формата) ввода/вывода
 // данные о структурах уровня handler не могут быть переданы в service/entity
 import (
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 )
 
 // JSONRequest json схема для получения 1 url

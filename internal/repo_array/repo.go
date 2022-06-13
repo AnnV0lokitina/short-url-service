@@ -1,26 +1,11 @@
-package repo
+package repo_array
 
 import (
 	"context"
 	"errors"
-	"sort"
-
 	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 )
-
-// PingBD Show that database is available.
-func (r *Repo) PingBD(_ context.Context) bool {
-	return true
-}
-
-// Close Closes file writer if information stored in file.
-func (r *Repo) Close(_ context.Context) error {
-	if r.writer != nil {
-		return r.writer.Close()
-	}
-	return nil
-}
 
 // SetURL Save url information to storage.
 func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
@@ -30,18 +15,22 @@ func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
 		UserID:      userID,
 		Deleted:     false,
 	}
-	if r.writer != nil {
-		if err := r.writer.WriteRecord(record); err != nil {
-			return err
+	r.rows = append(r.rows, record)
+	return nil
+}
+
+func findByShortURL(rows []*entity.Record, shortURL string) (*entity.Record, bool) {
+	for i := range rows {
+		if rows[i].ShortURL == shortURL {
+			return rows[i], true
 		}
 	}
-	r.rows[url.Short] = record
-	return nil
+	return nil, false
 }
 
 // GetURL Get url information from storage.
 func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
-	record, ok := r.rows[shortURL]
+	record, ok := findByShortURL(r.rows, shortURL)
 	if !ok {
 		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
 	}
@@ -57,24 +46,19 @@ func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
 
 // GetUserURLList Get list of urls, created by user, from storage
 func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
-	keys := make([]string, 0, len(r.rows))
-	for k, row := range r.rows {
+	userLog := make([]*entity.URL, 0, len(r.rows))
+	for _, row := range r.rows {
 		if id != row.UserID {
 			continue
 		}
-		keys = append(keys, k)
+		userLog = append(userLog, &entity.URL{
+			Short:    row.ShortURL,
+			Original: row.OriginalURL,
+		})
 	}
-	sort.Strings(keys)
-	logLength := len(keys)
+	logLength := len(userLog)
 	if logLength <= 0 {
 		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
-	}
-	userLog := make([]*entity.URL, 0, logLength)
-	for _, k := range keys {
-		userLog = append(userLog, &entity.URL{
-			Short:    r.rows[k].ShortURL,
-			Original: r.rows[k].OriginalURL,
-		})
 	}
 	return userLog, nil
 }
@@ -93,9 +77,9 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 // DeleteBatch Mark urls list like deleted.
 func (r *Repo) DeleteBatch(_ context.Context, userID uint32, listShortURL []string) error {
 	for _, shortURL := range listShortURL {
-		record, ok := r.rows[shortURL]
+		record, ok := findByShortURL(r.rows, shortURL)
 		if ok && record.UserID == userID {
-			r.rows[shortURL].Deleted = true
+			record.Deleted = true
 		}
 	}
 	return nil
@@ -105,7 +89,7 @@ func (r *Repo) DeleteBatch(_ context.Context, userID uint32, listShortURL []stri
 func (r *Repo) CheckUserBatch(_ context.Context, userID uint32, listShortURL []string) ([]string, error) {
 	resultList := make([]string, 0, len(listShortURL))
 	for _, shortURL := range listShortURL {
-		record, ok := r.rows[shortURL]
+		record, ok := findByShortURL(r.rows, shortURL)
 		if ok && record.UserID == userID {
 			resultList = append(resultList, shortURL)
 		}

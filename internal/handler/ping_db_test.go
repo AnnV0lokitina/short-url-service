@@ -2,8 +2,8 @@ package handler
 
 import (
 	"fmt"
-	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
+	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
+	"github.com/AnnV0lokitina/short-url-service/internal/service"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 	"net/http/httptest"

@@ -1,4 +1,4 @@
-package repo
+package repo_array
 
 import (
 	"context"
@@ -7,9 +7,14 @@ import (
 	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 )
 
+const (
+	urlFullString = "http://xfrpm.ru/ovxnqqxiluncj/lqhza6knc6t2m"
+	shortURLHost  = "http://localhost:8080"
+)
+
 func BenchmarkRepo_GetURL(b *testing.B) {
 	type fields struct {
-		list map[string]*entity.Record
+		list []*entity.Record
 	}
 	type args struct {
 		shortURL string
@@ -17,18 +22,19 @@ func BenchmarkRepo_GetURL(b *testing.B) {
 
 	url := entity.NewURL(urlFullString, shortURLHost)
 	deletedURL := entity.NewURL("deleted_full", shortURLHost)
-	list := make(map[string]*entity.Record)
-	list[url.Short] = &entity.Record{
-		OriginalURL: url.Original,
-		ShortURL:    url.Short,
-		UserID:      1234,
-		Deleted:     false,
-	}
-	list[deletedURL.Short] = &entity.Record{
-		OriginalURL: deletedURL.Original,
-		ShortURL:    deletedURL.Short,
-		UserID:      12345,
-		Deleted:     true,
+	list := []*entity.Record{
+		{
+			OriginalURL: url.Original,
+			ShortURL:    url.Short,
+			UserID:      1234,
+			Deleted:     false,
+		},
+		{
+			OriginalURL: deletedURL.Original,
+			ShortURL:    deletedURL.Short,
+			UserID:      12345,
+			Deleted:     true,
+		},
 	}
 
 	tests := []struct {
@@ -90,7 +96,7 @@ func BenchmarkRepo_GetURL(b *testing.B) {
 
 func BenchmarkRepo_SetURL(b *testing.B) {
 	type fields struct {
-		rows map[string]*entity.Record
+		rows []*entity.Record
 	}
 	type args struct {
 		url      *entity.URL
@@ -109,7 +115,7 @@ func BenchmarkRepo_SetURL(b *testing.B) {
 		{
 			name: "benchmark set url positive",
 			fields: fields{
-				rows: make(map[string]*entity.Record),
+				rows: make([]*entity.Record, 0),
 			},
 			args: args{
 				url:      url,
@@ -132,15 +138,16 @@ func BenchmarkRepo_SetURL(b *testing.B) {
 
 func BenchmarkRepo_GetUserURLList(b *testing.B) {
 	type input struct {
-		rows   map[string]*entity.Record
+		rows   []*entity.Record
 		userID uint32
 	}
-	rows := make(map[string]*entity.Record)
-	rows["short"] = &entity.Record{
-		ShortURL:    "short",
-		OriginalURL: "original",
-		UserID:      1234,
-		Deleted:     false,
+	rows := []*entity.Record{
+		{
+			ShortURL:    "short",
+			OriginalURL: "original",
+			UserID:      1234,
+			Deleted:     false,
+		},
 	}
 	tests := []struct {
 		name  string
@@ -176,18 +183,19 @@ func BenchmarkRepo_GetUserURLList(b *testing.B) {
 }
 
 func BenchmarkRepo_DeleteBatch(b *testing.B) {
-	rows := make(map[string]*entity.Record)
-	rows["to_delete"] = &entity.Record{
-		ShortURL:    "to_delete",
-		OriginalURL: "original",
-		UserID:      1234,
-		Deleted:     false,
-	}
-	rows["not_delete"] = &entity.Record{
-		ShortURL:    "not_delete",
-		OriginalURL: "original",
-		UserID:      12345,
-		Deleted:     false,
+	rows := []*entity.Record{
+		{
+			ShortURL:    "to_delete",
+			OriginalURL: "original",
+			UserID:      1234,
+			Deleted:     false,
+		},
+		{
+			ShortURL:    "not_delete",
+			OriginalURL: "original",
+			UserID:      12345,
+			Deleted:     false,
+		},
 	}
 	repo := &Repo{
 		rows: rows,
@@ -199,18 +207,19 @@ func BenchmarkRepo_DeleteBatch(b *testing.B) {
 }
 
 func BenchmarkRepo_CheckUserBatch(b *testing.B) {
-	rows := make(map[string]*entity.Record)
-	rows["to_delete"] = &entity.Record{
-		ShortURL:    "to_delete",
-		OriginalURL: "original",
-		UserID:      1234,
-		Deleted:     false,
-	}
-	rows["not_delete"] = &entity.Record{
-		ShortURL:    "not_delete",
-		OriginalURL: "original",
-		UserID:      12345,
-		Deleted:     false,
+	rows := []*entity.Record{
+		{
+			ShortURL:    "to_delete",
+			OriginalURL: "original",
+			UserID:      1234,
+			Deleted:     false,
+		},
+		{
+			ShortURL:    "not_delete",
+			OriginalURL: "original",
+			UserID:      12345,
+			Deleted:     false,
+		},
 	}
 	repo := &Repo{
 		rows: rows,

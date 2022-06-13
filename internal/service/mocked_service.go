@@ -2,10 +2,9 @@ package service
 
 import (
 	"context"
+	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/mocked_repo"
 
 	"github.com/stretchr/testify/mock"
-
-	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
 )
 
 var mockedBaseURL string

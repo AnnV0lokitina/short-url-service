@@ -8,8 +8,8 @@ import (
 	"net/http"
 	netUrl "net/url"
 
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 )
 
 // SetURLFromJSON Get URL to shorten in json format.

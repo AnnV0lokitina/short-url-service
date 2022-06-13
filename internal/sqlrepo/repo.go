@@ -8,8 +8,8 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 )
 
 var dbPingTimeout = 1 * time.Second

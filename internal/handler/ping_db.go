@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// PingDB Check if db is available.
+// PingDB Checks if db is available.
 func (h *Handler) PingDB() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

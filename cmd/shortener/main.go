@@ -8,10 +8,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
-	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
+	handlerPkg "github.com/AnnV0lokitina/short-url-service/internal/handler"
+	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
+	"github.com/AnnV0lokitina/short-url-service/internal/service"
+	"github.com/AnnV0lokitina/short-url-service/internal/sqlrepo"
 	_ "net/http/pprof"
 )
 

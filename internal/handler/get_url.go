@@ -6,8 +6,8 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 )
 
 // GetURL Follow by shorten url.

@@ -1,10 +1,10 @@
-package handler
+package handler_test
 
 import (
 	"fmt"
-	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
-	"github.com/go-chi/chi/v5"
+	handlerPkg "github.com/AnnV0lokitina/short-url-service/internal/handler"
+	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
+	"github.com/AnnV0lokitina/short-url-service/internal/service"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -12,42 +12,11 @@ import (
 	"time"
 )
 
-func ExampleHandler_GetURL() {
+func Example() {
 	repo := repoPkg.NewMemoryRepo()
 	service := service.NewService("http://localhost:8080", repo)
 
-	h := &Handler{
-		Mux:     chi.NewMux(),
-		service: service,
-	}
-
-	sendBody := strings.NewReader("fullURL")
-	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)
-	w := httptest.NewRecorder()
-	h.SetURL().ServeHTTP(w, req)
-
-	req = httptest.NewRequest(http.MethodGet, "http://localhost:8080/27580c7e4c2c1de6435730c74bb9f8ca", sendBody)
-	w = httptest.NewRecorder()
-	h.GetURL().ServeHTTP(w, req)
-	res := w.Result()
-
-	defer res.Body.Close()
-	fmt.Println(res.StatusCode)
-	fmt.Println(res.Header.Get("Location"))
-
-	// Output:
-	// 307
-	// fullURL
-}
-
-func ExampleHandler_GetUserURLList() {
-	repo := repoPkg.NewMemoryRepo()
-	service := service.NewService("http://localhost:8080", repo)
-
-	h := &Handler{
-		Mux:     chi.NewMux(),
-		service: service,
-	}
+	h := handlerPkg.NewHandler(service)
 
 	sendBody := strings.NewReader("fullURL")
 	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)

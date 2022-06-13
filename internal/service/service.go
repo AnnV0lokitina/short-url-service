@@ -6,7 +6,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 )
 
 // Repo declare repository interface

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 )
 
 // Reader Store file pointer and decoder to read file.

@@ -1,8 +1,8 @@
 package repo
 
 import (
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/repo/file"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	"github.com/AnnV0lokitina/short-url-service/internal/repo/file"
 )
 
 // Repo store in - memory storage and file - writer.

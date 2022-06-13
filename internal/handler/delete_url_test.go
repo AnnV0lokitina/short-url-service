@@ -3,9 +3,8 @@ package handler
 import (
 	"context"
 	"fmt"
-	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
-	"github.com/go-chi/chi/v5"
+	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
+	"github.com/AnnV0lokitina/short-url-service/internal/service"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,10 +21,13 @@ func ExampleHandler_DeleteBatch() {
 		service.CreateDeleteWorkerPull(ctx, 3)
 	}()
 
-	h := &Handler{
-		Mux:     chi.NewMux(),
-		service: service,
-	}
+	//h := &Handler{
+	//	Mux:     chi.NewMux(),
+	//	service: service,
+	//}
+
+	h := NewHandler(service)
+	h.DeleteBatch()
 
 	sendBody := strings.NewReader("fullURL")
 	req := httptest.NewRequest(http.MethodPost, "http://localhost:8080", sendBody)

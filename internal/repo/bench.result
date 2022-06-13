@@ -1,0 +1,15 @@
+goos: linux
+goarch: amd64
+pkg: github.com/AnnV0lokitina/short-url-service/internal/repo
+cpu: 11th Gen Intel(R) Core(TM) i5-11400 @ 2.60GHz
+BenchmarkRepo_GetURL/benchmark_repo_get_url-12         	43571091	        63.16 ns/op
+BenchmarkRepo_GetURL/benchmark_repo_get_url_error-12   	12061066	        93.17 ns/op
+BenchmarkRepo_GetURL/benchmark_repo_get_url_error_(empty_uuid)-12         	11571498	       115.4 ns/op
+BenchmarkRepo_GetURL/benchmark_repo_get_deleted_url-12                    	14216305	       100.9 ns/op
+BenchmarkRepo_SetURL/benchmark_set_url_positive-12                        	14065662	        79.63 ns/op
+BenchmarkRepo_GetUserURLList/benchmark_get_urls_success-12                	 6711001	       173.4 ns/op
+BenchmarkRepo_GetUserURLList/benchmark_get_urls_not_found-12              	 5516301	       208.8 ns/op
+BenchmarkRepo_DeleteBatch-12                                              	109741994	        10.92 ns/op
+BenchmarkRepo_CheckUserBatch-12                                           	25496638	        77.58 ns/op
+PASS
+ok  	github.com/AnnV0lokitina/short-url-service/internal/repo	16.768s

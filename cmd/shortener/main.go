@@ -12,7 +12,6 @@ import (
 	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
 	"github.com/AnnV0lokitina/short-url-service/internal/service"
 	"github.com/AnnV0lokitina/short-url-service/internal/sqlrepo"
-	_ "net/http/pprof"
 )
 
 const nOfWorkers = 3

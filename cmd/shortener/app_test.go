@@ -22,10 +22,10 @@ func TestNewApp(t *testing.T) {
 	}
 
 	handler := new(MockedHandler)
-	tests := []struct {
-		name string
+	tests := []*struct {
 		args args
 		want *App
+		name string
 	}{
 		{
 			name: "test new app",

@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -26,9 +25,6 @@ var (
 
 func main() {
 	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
 	cfg := initConfig()
 	initParams(cfg)
 

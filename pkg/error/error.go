@@ -1,3 +1,4 @@
+// Package error has application errors
 package error
 
 import (

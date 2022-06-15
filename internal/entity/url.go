@@ -1,3 +1,4 @@
+// Package entity has all application entities
 package entity
 
 import (

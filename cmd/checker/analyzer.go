@@ -32,7 +32,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	}
 	for _, file := range pass.Files {
 		filename := pass.Fset.Position(file.Pos()).Filename
-		if !strings.HasSuffix(filename, ".go") || strings.HasSuffix(filename, "_test.go") {
+		if strings.Contains(filename, "test") || !strings.HasSuffix(filename, ".go") {
 			continue
 		}
 		ast.Inspect(file, func(node ast.Node) bool {

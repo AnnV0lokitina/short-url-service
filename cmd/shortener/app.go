@@ -52,7 +52,7 @@ func (app *App) Run(ctx context.Context, serverAddress string, enableHTTPS bool)
 	httpShutdownCh := make(chan struct{})
 
 	if enableHTTPS {
-		//cache, _ := os.UserCacheDir()
+		log.Println("https settings")
 		manager := &autocert.Manager{
 			Cache:      autocert.DirCache("certs"),
 			Prompt:     autocert.AcceptTOS,
@@ -67,6 +67,7 @@ func (app *App) Run(ctx context.Context, serverAddress string, enableHTTPS bool)
 			TLSConfig: tlsConfig,
 		}
 	} else {
+		log.Println("http settings " + serverAddress)
 		server = &http.Server{Addr: serverAddress, Handler: app.h}
 	}
 
@@ -83,8 +84,10 @@ func (app *App) Run(ctx context.Context, serverAddress string, enableHTTPS bool)
 	}()
 
 	if enableHTTPS {
+		log.Println("start https")
 		err = server.ListenAndServeTLS("", "")
 	} else {
+		log.Println("start http")
 		err = server.ListenAndServe()
 	}
 

@@ -3,7 +3,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -24,8 +23,9 @@ var (
 )
 
 func main() {
-	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
+	log.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
 	cfg := InitConfig()
+	log.Println(cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {

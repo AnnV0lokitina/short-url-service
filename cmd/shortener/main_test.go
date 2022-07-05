@@ -13,7 +13,7 @@ import (
 
 func TestInitRepo(t *testing.T) {
 	args := flag.Args()
-	if args[0] != "local" {
+	if len(args) > 0 && args[0] != "local" {
 		t.Skip("Skipping testing in CI environment")
 	}
 	cfg := &config{}

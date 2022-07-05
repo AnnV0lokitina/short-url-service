@@ -11,6 +11,9 @@ import (
 )
 
 func TestInitRepo(t *testing.T) {
+	if os.Getenv("LOCAL") == "" {
+		t.Skip("Skipping testing in CI environment")
+	}
 	cfg := &config{}
 	repo, err := initRepo(context.TODO(), cfg)
 	assert.Nil(t, err)

@@ -9,6 +9,7 @@ import (
 	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 )
@@ -84,6 +85,9 @@ func generateBatch() []*entity.BatchURLItem {
 }
 
 func TestRepo(t *testing.T) {
+	if os.Getenv("LOCAL") == "" {
+		t.Skip("Skipping testing in CI environment")
+	}
 	var labelErr *labelError.LabelError
 
 	fContent, err := ioutil.ReadFile("../../cmd/shortener/defaults/defaults_run_test.json")

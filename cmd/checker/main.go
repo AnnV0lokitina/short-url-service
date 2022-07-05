@@ -1,3 +1,4 @@
+// Package checker checks code
 package main
 
 import (

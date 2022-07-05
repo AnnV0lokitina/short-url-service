@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go/ast"
 	"golang.org/x/tools/go/analysis"
+	"strings"
 )
 
 var NoExitAnalyzer = &analysis.Analyzer{
@@ -30,6 +31,10 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		return nil, nil
 	}
 	for _, file := range pass.Files {
+		filename := pass.Fset.Position(file.Pos()).Filename
+		if strings.Contains(filename, "test") || !strings.HasSuffix(filename, ".go") {
+			continue
+		}
 		ast.Inspect(file, func(node ast.Node) bool {
 			if f, ok := node.(*ast.FuncDecl); ok {
 				if f.Name.Name == "main" {

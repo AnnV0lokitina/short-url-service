@@ -11,7 +11,6 @@ import (
 
 	handlerPkg "github.com/AnnV0lokitina/short-url-service/internal/handler"
 	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service/internal/service"
 	servicePkg "github.com/AnnV0lokitina/short-url-service/internal/service"
 	"github.com/AnnV0lokitina/short-url-service/internal/sqlrepo"
 )
@@ -53,13 +52,13 @@ func main() {
 	}
 }
 
-func createApp(cfg *config, repo service.Repo) (*App, *servicePkg.Service) {
-	service := service.NewService(cfg.BaseURL, repo)
+func createApp(cfg *config, repo servicePkg.Repo) (*App, *servicePkg.Service) {
+	service := servicePkg.NewService(cfg.BaseURL, repo)
 	handler := handlerPkg.NewHandler(service)
 	return NewApp(handler), service
 }
 
-func initRepo(ctx context.Context, cfg *config) (service.Repo, error) {
+func initRepo(ctx context.Context, cfg *config) (servicePkg.Repo, error) {
 	if cfg.DataBaseDSN != "" {
 		repository, err := sqlrepo.NewSQLRepo(ctx, cfg.DataBaseDSN)
 		if err != nil {

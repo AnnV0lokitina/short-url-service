@@ -4,21 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
+	"github.com/caarlos0/env/v6"
 	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
-	"strings"
-
-	"github.com/caarlos0/env/v6"
 )
 
 type config struct {
-	ServerAddress   string `env:"SERVER_ADDRESS"  envDefault:"localhost:8080" json:"server_address"`
-	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080" json:"base_url"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"" json:"file_storage_path"`
-	DataBaseDSN     string `env:"DATABASE_DSN" envDefault:"" json:"database_dsn"`
-	EnableHTTPS     bool   `env:"ENABLE_HTTPS" json:"enable_https"`
+	ServerAddress   string `env:"SERVER_ADDRESS"  envDefault:"localhost:8080" json:"server_address,omitempty"`
+	BaseURL         string `env:"BASE_URL" envDefault:"http://localhost:8080" json:"base_url,omitempty"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH" envDefault:"" json:"file_storage_path,omitempty"`
+	DataBaseDSN     string `env:"DATABASE_DSN" envDefault:"" json:"database_dsn,omitempty"`
+	EnableHTTPS     bool   `env:"ENABLE_HTTPS" json:"enable_https,omitempty"`
 	Config          string `env:"CONFIG" envDefault:"" json:"-"`
 }
 
@@ -31,35 +29,37 @@ type paramsConfig struct {
 	Config          *string
 }
 
-//type fileConfig struct {
-//	ServerAddress   string `json:"server_address"`
-//	BaseURL         string `json:"base_url"`
-//	FileStoragePath string `json:"file_storage_path"`
-//	DataBaseDSN     string `json:"database_dsn"`
-//	EnableHTTPS     bool   `json:"enable_https"`
-//}
-
 func initParams() *paramsConfig {
 	cfg := paramsConfig{}
-	args := strings.Join(os.Args[1:], ",")
-	if strings.Contains(args, "-a,") {
-		cfg.ServerAddress = flag.String("a", "", "Server address")
-	}
-	if strings.Contains(args, "-b,") {
-		cfg.BaseURL = flag.String("b", "", "Base URL")
-	}
-	if strings.Contains(args, "-f,") {
-		cfg.FileStoragePath = flag.String("f", "", "File storage path")
-	}
-	if strings.Contains(args, "-d,") {
-		cfg.DataBaseDSN = flag.String("d", "", "DB connect string")
-	}
-	if strings.Contains(args, "-s,") {
-		cfg.EnableHTTPS = flag.Bool("s", false, "Enable HTTPS")
-	}
-	if strings.Contains(args, "-c,") {
-		cfg.Config = flag.String("c", "", "config path string")
-	}
+
+	flag.Func("a", "Server address", func(flagValue string) error {
+		cfg.ServerAddress = &flagValue
+		return nil
+	})
+	flag.Func("b", "Base URL", func(flagValue string) error {
+		cfg.BaseURL = &flagValue
+		return nil
+	})
+	flag.Func("f", "File storage path", func(flagValue string) error {
+		cfg.FileStoragePath = &flagValue
+		return nil
+	})
+	flag.Func("d", "DB connect string", func(flagValue string) error {
+		cfg.DataBaseDSN = &flagValue
+		return nil
+	})
+	flag.Func("s", "Enable HTTPS", func(flagValue string) error {
+		v, err := strconv.ParseBool(flagValue)
+		if err != nil {
+			log.Println("error while parse enable HTTPS flag")
+		}
+		cfg.EnableHTTPS = &v
+		return nil
+	})
+	flag.Func("c", "config path string", func(flagValue string) error {
+		cfg.Config = &flagValue
+		return nil
+	})
 	flag.Parse()
 	return &cfg
 }

@@ -24,7 +24,8 @@ var (
 
 func main() {
 	log.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
-	cfg := InitConfig()
+	params := InitParams()
+	cfg := InitConfig(params)
 	log.Println(cfg)
 
 	ctx, cancel := context.WithCancel(context.Background())

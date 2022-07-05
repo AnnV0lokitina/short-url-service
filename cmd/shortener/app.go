@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -26,7 +25,6 @@ func NewApp(handler http.Handler) *App {
 
 func getSelfSignedOrLetsEncryptCert(certManager *autocert.Manager) func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	return func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
-		fmt.Println("1111")
 		dirCache, ok := certManager.Cache.(autocert.DirCache)
 		if !ok {
 			dirCache = "certs"

@@ -29,7 +29,7 @@ type paramsConfig struct {
 	Config          *string
 }
 
-func initParams() *paramsConfig {
+func InitParams() *paramsConfig {
 	cfg := paramsConfig{}
 
 	flag.Func("a", "Server address", func(flagValue string) error {
@@ -93,8 +93,7 @@ func initParamsWithConfig(params *paramsConfig) *config {
 	return &cfg
 }
 
-func InitConfig() *config {
-	params := initParams()
+func InitConfig(params *paramsConfig) *config {
 	cfgNoFile := initParamsWithConfig(params)
 	if cfgNoFile.Config == "" {
 		return cfgNoFile

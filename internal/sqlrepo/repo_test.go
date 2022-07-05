@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 )
@@ -85,7 +85,8 @@ func generateBatch() []*entity.BatchURLItem {
 }
 
 func TestRepo(t *testing.T) {
-	if os.Getenv("LOCAL") == "" {
+	args := flag.Args()
+	if args[0] != "local" {
 		t.Skip("Skipping testing in CI environment")
 	}
 	var labelErr *labelError.LabelError

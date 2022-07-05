@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
 	servicePkg "github.com/AnnV0lokitina/short-url-service/internal/service"
 	"github.com/AnnV0lokitina/short-url-service/internal/sqlrepo"
@@ -11,7 +12,8 @@ import (
 )
 
 func TestInitRepo(t *testing.T) {
-	if os.Getenv("LOCAL") == "" {
+	args := flag.Args()
+	if args[0] != "local" {
 		t.Skip("Skipping testing in CI environment")
 	}
 	cfg := &config{}
@@ -22,7 +24,8 @@ func TestInitRepo(t *testing.T) {
 	os.Clearenv()
 	err = setEnvFromJSON("defaults/defaults_run_test.json")
 	assert.Nil(t, err)
-	cfgEnv := InitConfig()
+	params := &paramsConfig{}
+	cfgEnv := InitConfig(params)
 
 	cfg.FileStoragePath = cfgEnv.FileStoragePath
 	repo, err = initRepo(context.TODO(), cfg)

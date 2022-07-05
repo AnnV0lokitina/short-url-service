@@ -1,5 +1,4 @@
 #!/bin/bash
 
-export LOCAL="local"
-go test $(go list ./... | grep -vE "(vendor)|(test)|(array$)|(mocked)|(bench)|(checker)") -race -coverprofile=coverage.out
+go test $(go list ./... | grep -vE "(vendor)|(test)|(array$)|(mocked)|(bench)|(checker)") -race -count=1 -coverprofile=coverage.out -args local
 go tool cover -func=coverage.out

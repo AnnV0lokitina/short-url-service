@@ -1,0 +1,7 @@
+{
+  "server_address": "test",
+  "base_url": "test",
+  "file_storage_path": "test",
+  "database_dsn": "test",
+  "enable_https": false
+}

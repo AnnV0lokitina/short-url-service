@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"log"
+	"sync"
 
 	"golang.org/x/sync/errgroup"
 
@@ -23,6 +24,7 @@ type Repo interface {
 
 // Service keep information to execute application tasks.
 type Service struct {
+	mu          sync.Mutex
 	baseURL     string
 	repo        Repo
 	jobChDelete chan *JobDelete
@@ -59,7 +61,9 @@ func (s *Service) GetRepo() Repo {
 
 // CreateDeleteWorkerPull Initialize pull of workers to delete urls list.
 func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
+	s.mu.Lock()
 	s.jobChDelete = make(chan *JobDelete)
+	s.mu.Unlock()
 	g, _ := errgroup.WithContext(ctx)
 
 	for i := 1; i <= nOfWorkers; i++ {
@@ -77,7 +81,9 @@ func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
 
 	go func() {
 		<-ctx.Done()
+		s.mu.Lock()
 		close(s.jobChDelete)
+		s.mu.Unlock()
 	}()
 
 	if err := g.Wait(); err != nil {
@@ -104,8 +110,10 @@ func (s *Service) DeleteURLList(ctx context.Context, userID uint32, checksums []
 		UserID: userID,
 		URLs:   list,
 	}
+	s.mu.Lock()
 	if s.jobChDelete != nil {
 		s.jobChDelete <- job
 	}
+	s.mu.Unlock()
 	return nil
 }

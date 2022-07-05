@@ -12,6 +12,7 @@ import (
 	handlerPkg "github.com/AnnV0lokitina/short-url-service/internal/handler"
 	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
 	"github.com/AnnV0lokitina/short-url-service/internal/service"
+	servicePkg "github.com/AnnV0lokitina/short-url-service/internal/service"
 	"github.com/AnnV0lokitina/short-url-service/internal/sqlrepo"
 )
 
@@ -25,13 +26,12 @@ var (
 
 func main() {
 	fmt.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
-	cfg := initConfig()
-	initParams(cfg)
+	cfg := InitConfig()
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
 
 		<-c
 		cancel()
@@ -42,18 +42,21 @@ func main() {
 	}
 	defer repo.Close(ctx)
 
-	service := service.NewService(cfg.BaseURL, repo)
-	handler := handlerPkg.NewHandler(service)
-	application := NewApp(handler)
-
+	application, service := createApp(cfg, repo)
 	go func() {
 		service.CreateDeleteWorkerPull(ctx, nOfWorkers)
 	}()
 
-	err = application.Run(ctx, cfg.ServerAddress)
+	err = application.Run(ctx, cfg.ServerAddress, cfg.EnableHTTPS)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func createApp(cfg *config, repo service.Repo) (*App, *servicePkg.Service) {
+	service := service.NewService(cfg.BaseURL, repo)
+	handler := handlerPkg.NewHandler(service)
+	return NewApp(handler), service
 }
 
 func initRepo(ctx context.Context, cfg *config) (service.Repo, error) {

@@ -24,6 +24,8 @@ func (r *Repo) Close(_ context.Context) error {
 
 // SetURL Save url information to storage.
 func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	record := &entity.Record{
 		ShortURL:    url.Short,
 		OriginalURL: url.Original,
@@ -41,6 +43,8 @@ func (r *Repo) SetURL(_ context.Context, userID uint32, url *entity.URL) error {
 
 // GetURL Get url information from storage.
 func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	record, ok := r.rows[shortURL]
 	if !ok {
 		return nil, labelError.NewLabelError(labelError.TypeNotFound, errors.New("not found"))
@@ -57,6 +61,8 @@ func (r *Repo) GetURL(_ context.Context, shortURL string) (*entity.URL, error) {
 
 // GetUserURLList Get list of urls, created by user, from storage
 func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	keys := make([]string, 0, len(r.rows))
 	for k, row := range r.rows {
 		if id != row.UserID {
@@ -81,17 +87,29 @@ func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, erro
 
 // AddBatch Save to storage list of urls.
 func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	for _, item := range list {
-		err := r.SetURL(ctx, userID, item.URL)
-		if err != nil {
-			return err
+		record := &entity.Record{
+			ShortURL:    item.URL.Short,
+			OriginalURL: item.URL.Original,
+			UserID:      userID,
+			Deleted:     false,
 		}
+		if r.writer != nil {
+			if err := r.writer.WriteRecord(record); err != nil {
+				return err
+			}
+		}
+		r.rows[item.URL.Short] = record
 	}
 	return nil
 }
 
 // DeleteBatch Mark urls list like deleted.
 func (r *Repo) DeleteBatch(_ context.Context, userID uint32, listShortURL []string) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	for _, shortURL := range listShortURL {
 		record, ok := r.rows[shortURL]
 		if ok && record.UserID == userID {
@@ -103,6 +121,8 @@ func (r *Repo) DeleteBatch(_ context.Context, userID uint32, listShortURL []stri
 
 // CheckUserBatch Return only urls witch can be deleted by user.
 func (r *Repo) CheckUserBatch(_ context.Context, userID uint32, listShortURL []string) ([]string, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 	resultList := make([]string, 0, len(listShortURL))
 	for _, shortURL := range listShortURL {
 		record, ok := r.rows[shortURL]

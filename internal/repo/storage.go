@@ -3,10 +3,12 @@ package repo
 import (
 	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 	"github.com/AnnV0lokitina/short-url-service/internal/repo/file"
+	"sync"
 )
 
 // Repo store in - memory storage and file - writer.
 type Repo struct {
+	mu     sync.Mutex
 	rows   map[string]*entity.Record
 	writer *file.Writer
 }

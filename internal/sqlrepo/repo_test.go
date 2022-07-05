@@ -86,7 +86,7 @@ func generateBatch() []*entity.BatchURLItem {
 
 func TestRepo(t *testing.T) {
 	args := flag.Args()
-	if len(args) > 0 && args[0] != "local" {
+	if len(args) == 0 || args[0] != "local" {
 		t.Skip("Skipping testing in CI environment")
 	}
 	var labelErr *labelError.LabelError

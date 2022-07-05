@@ -105,12 +105,12 @@ func TestRepo(t *testing.T) {
 	url := entity.NewURL("url", shortURLHost)
 	list := generateBatch()
 
-	readURLList, err := repo.GetUserURLList(ctx, rightUser)
+	_, err = repo.GetUserURLList(ctx, rightUser)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeNotFound, labelErr.Label)
 
-	readURL, err := repo.GetURL(ctx, url.Short)
+	_, err = repo.GetURL(ctx, url.Short)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeNotFound, labelErr.Label)
@@ -121,18 +121,18 @@ func TestRepo(t *testing.T) {
 	err = repo.AddBatch(ctx, rightUser, list)
 	assert.Nil(t, err)
 
-	readURL, err = repo.GetURL(ctx, url.Short)
+	readURL, err := repo.GetURL(ctx, url.Short)
 	assert.Nil(t, err)
 	assert.Equal(t, url, readURL)
 
-	readURLList, err = repo.GetUserURLList(ctx, rightUser)
+	readURLList, err := repo.GetUserURLList(ctx, rightUser)
 	assert.Nil(t, err)
 	assert.Equal(t, len(list)+1, len(readURLList))
 	for _, item := range readURLList {
 		assert.IsType(t, &entity.URL{}, item)
 	}
 
-	readURLList, err = repo.GetUserURLList(ctx, wrongUser)
+	_, err = repo.GetUserURLList(ctx, wrongUser)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeNotFound, labelErr.Label)

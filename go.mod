@@ -1,4 +1,4 @@
-module github.com/AnnV0lokitina/short-url-service.git
+module github.com/AnnV0lokitina/short-url-service
 
 go 1.17
 

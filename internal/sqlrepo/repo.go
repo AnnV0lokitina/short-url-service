@@ -3,15 +3,18 @@ package sqlrepo
 import (
 	"context"
 	"errors"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
+	"time"
+
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
-	"time"
+
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 )
 
 var dbPingTimeout = 1 * time.Second
 
+// PgxIface Available functions of db connection.
 type PgxIface interface {
 	Ping(ctx context.Context) error
 	Close(ctx context.Context) error
@@ -23,11 +26,13 @@ type PgxIface interface {
 	SendBatch(ctx context.Context, b *pgx.Batch) pgx.BatchResults
 }
 
+// Repo Store information about db connection.
 type Repo struct {
 	conn PgxIface // *pgx.Conn
 	//conn *pgx.Conn
 }
 
+// NewSQLRepo Create repository, connected to db.
 func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
@@ -50,10 +55,12 @@ func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
 	}, nil
 }
 
+// Close Closes db connection.
 func (r *Repo) Close(ctx context.Context) error {
 	return r.conn.Close(ctx)
 }
 
+// PingBD Check if database is available.
 func (r *Repo) PingBD(ctx context.Context) bool {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -63,6 +70,7 @@ func (r *Repo) PingBD(ctx context.Context) bool {
 	return true
 }
 
+// SetURL Save url to db.
 func (r *Repo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -79,6 +87,7 @@ func (r *Repo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error
 	return nil
 }
 
+// GetURL get url from db.
 func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -102,6 +111,7 @@ func (r *Repo) GetURL(ctx context.Context, shortURL string) (*entity.URL, error)
 	return url, nil
 }
 
+// GetUserURLList Get urls list from db.
 func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -126,6 +136,7 @@ func (r *Repo) GetUserURLList(ctx context.Context, id uint32) ([]*entity.URL, er
 	return log, nil
 }
 
+// AddBatch Save urls list to db.
 func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -160,6 +171,7 @@ func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.Batch
 	return nil
 }
 
+// DeleteBatch Mark urls in db like deleted.
 func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, listShortURL []string) error {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -195,6 +207,7 @@ func (r *Repo) DeleteBatch(ctx context.Context, userID uint32, listShortURL []st
 	return nil
 }
 
+// CheckUserBatch Return only urls witch can be deleted by user.
 func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, listShortURL []string) ([]string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()

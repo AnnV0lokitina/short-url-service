@@ -3,14 +3,16 @@ package repo
 import (
 	"context"
 	"errors"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
-	"github.com/pashagolub/pgxmock"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/pashagolub/pgxmock"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 )
 
 const (
@@ -289,7 +291,7 @@ func TestRepo_GetUserURLList(t *testing.T) {
 				userID: 1234,
 			},
 			want: []*entity.URL{
-				&entity.URL{
+				{
 					Short:    "short",
 					Original: "original",
 				},
@@ -364,4 +366,20 @@ func TestRepo_CheckUserBatch(t *testing.T) {
 	resultList, _ := repo.CheckUserBatch(context.TODO(), 1234, list)
 	assert.Equal(t, 1, len(resultList))
 	assert.Equal(t, "to_delete", list[0])
+}
+
+func TestPingBD(t *testing.T) {
+	repo := &Repo{
+		rows: make(map[string]*entity.Record),
+	}
+	db := repo.PingBD(context.TODO())
+	assert.True(t, db)
+}
+
+func TestClose(t *testing.T) {
+	repo := &Repo{
+		rows: make(map[string]*entity.Record),
+	}
+	err := repo.Close(context.TODO())
+	assert.Nil(t, err)
 }

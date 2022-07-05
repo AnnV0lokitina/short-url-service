@@ -2,7 +2,7 @@ package handler
 
 import (
 	"context"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
+	"github.com/AnnV0lokitina/short-url-service/internal/service"
 	"github.com/go-chi/chi/v5"
 	"net/http"
 )
@@ -14,6 +14,7 @@ const (
 	encoding              = "gzip"
 )
 
+// Service interface describes business-logic layer
 type Service interface {
 	DeleteURLList(ctx context.Context, userID uint32, checksums []string) error
 	GetRepo() service.Repo
@@ -21,11 +22,13 @@ type Service interface {
 	SetBaseURL(baseURL string)
 }
 
+// Handler structure holds dependencies for server handlers.
 type Handler struct {
 	*chi.Mux
 	service Service
 }
 
+// NewHandler Create new Handler.
 func NewHandler(service Service) *Handler {
 	h := &Handler{
 		Mux:     chi.NewMux(),
@@ -41,11 +44,13 @@ func NewHandler(service Service) *Handler {
 	h.Get("/ping", h.PingDB())
 	h.Post("/api/shorten/batch", h.ShortenBatch())
 	h.Delete("/api/user/urls", h.DeleteBatch())
+
 	h.MethodNotAllowed(h.ExecIfNotAllowed())
 
 	return h
 }
 
+// ExecIfNotAllowed Executed if url is bad.
 func (h *Handler) ExecIfNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request 5", http.StatusBadRequest)

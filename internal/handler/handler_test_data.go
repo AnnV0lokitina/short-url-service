@@ -2,13 +2,15 @@ package handler
 
 import (
 	"encoding/json"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"github.com/stretchr/testify/require"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 )
 
 type testRequestStruct struct {

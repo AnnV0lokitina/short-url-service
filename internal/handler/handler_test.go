@@ -2,16 +2,18 @@ package handler
 
 import (
 	"compress/gzip"
-	repoPkg "github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	servicePkg "github.com/AnnV0lokitina/short-url-service.git/internal/service"
-	"github.com/caarlos0/env/v6"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/mocked_repo"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/caarlos0/env/v6"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	servicePkg "github.com/AnnV0lokitina/short-url-service/internal/service"
 )
 
 func testRequest(t *testing.T, request testRequestStruct) *http.Response {

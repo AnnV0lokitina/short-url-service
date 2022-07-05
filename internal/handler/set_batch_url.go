@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// ShortenBatch handler is used to process batches of urls.
 func (h *Handler) ShortenBatch() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

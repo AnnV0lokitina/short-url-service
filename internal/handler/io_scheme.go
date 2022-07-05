@@ -1,28 +1,28 @@
 package handler
 
-// файл содержит описание схем (формата) ввода/вывода
-// данные о структурах уровня handler не могут быть переданы в service/entity
+// file contains description of I/O schemes (format)
+// data about handler level structures cannot be passed to service/entity
 import (
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 )
 
-// JSONRequest json схема для получения 1 url
+// JSONRequest json schema to get 1 url
 type JSONRequest struct {
 	URL string `json:"url"`
 }
 
-// JSONResponse json схема для возвращения 1 url
+// JSONResponse json schema to return 1 url
 type JSONResponse struct {
 	Result string `json:"result"`
 }
 
-// JSONItemRequest json схема для получения списка url
+// JSONItemRequest json schema to get a list of urls
 type JSONItemRequest struct {
 	CorrelationID string `json:"correlation_id"`
 	OriginalURL   string `json:"original_url"`
 }
 
-// JSONItemResponse json схема для возвращения списка url
+// JSONItemResponse json schema to return a list of urls
 type JSONItemResponse struct {
 	CorrelationID string `json:"correlation_id"`
 	ShortURL      string `json:"short_url"`
@@ -41,9 +41,9 @@ func (io *JSONItemResponse) fromBatchURLItem(item *entity.BatchURLItem) {
 	io.ShortURL = item.URL.Short
 }
 
-// JSONListToURLList конвертация полученых данных объекты приложения
+// JSONListToURLList converting received data application objects
 func JSONListToURLList(itemInputList []JSONItemRequest, serverAddress string) []*entity.BatchURLItem {
-	list := make([]*entity.BatchURLItem, 0)
+	list := make([]*entity.BatchURLItem, 0, len(itemInputList)) // , len(itemInputList)
 	for _, item := range itemInputList {
 		urlItem := item.toBatchURLItem(serverAddress)
 		list = append(list, urlItem)
@@ -51,9 +51,9 @@ func JSONListToURLList(itemInputList []JSONItemRequest, serverAddress string) []
 	return list
 }
 
-// URLListTOJSONList объектов приложения в формат вывода
+// URLListTOJSONList application objects to output format
 func URLListTOJSONList(list []*entity.BatchURLItem) []JSONItemResponse {
-	outputList := make([]JSONItemResponse, 0)
+	outputList := make([]JSONItemResponse, 0, len(list)) // , len(list)
 	for _, item := range list {
 		i := &JSONItemResponse{}
 		i.fromBatchURLItem(item)
@@ -61,16 +61,3 @@ func URLListTOJSONList(list []*entity.BatchURLItem) []JSONItemResponse {
 	}
 	return outputList
 }
-
-//type JSONIDListRequest []string
-//
-//func JSONIDListToURLList(inputList JSONIDListRequest, serverAddress string) []*entity.URL {
-//	list := make([]*entity.URL, 0)
-//	for _, checksum := range inputList {
-//		urlItem := &entity.URL{
-//			Short: entity.CreateShortURL(checksum, serverAddress),
-//		}
-//		list = append(list, urlItem)
-//	}
-//	return list
-//}

@@ -1,15 +1,17 @@
 package repo
 
 import (
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/repo/file"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	"github.com/AnnV0lokitina/short-url-service/internal/repo/file"
 )
 
+// Repo store in - memory storage and file - writer.
 type Repo struct {
 	rows   map[string]*entity.Record
 	writer *file.Writer
 }
 
+// NewFileRepo create repository to store information in file.
 func NewFileRepo(filePath string) (*Repo, error) {
 	records, err := createRecords(filePath)
 	if err != nil {
@@ -26,6 +28,7 @@ func NewFileRepo(filePath string) (*Repo, error) {
 	}, nil
 }
 
+// NewMemoryRepo create repository to store information in memory.
 func NewMemoryRepo() *Repo {
 	return &Repo{
 		rows:   make(map[string]*entity.Record),

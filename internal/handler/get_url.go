@@ -4,16 +4,18 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/entity"
-	labelError "github.com/AnnV0lokitina/short-url-service.git/pkg/error"
-	"github.com/go-chi/chi/v5"
 	"net/http"
+
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
+	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
 )
 
+// GetURL Follow by shorten url.
 func (h *Handler) GetURL() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
-		checksum := chi.URLParam(r, "id")
+		path := r.URL.Path
+		checksum := path[1:]
 		shortURL := entity.CreateShortURL(checksum, h.service.GetBaseURL())
 		url, err := h.service.GetRepo().GetURL(ctx, shortURL)
 		if err == nil {
@@ -30,6 +32,7 @@ func (h *Handler) GetURL() http.HandlerFunc {
 	}
 }
 
+// GetUserURLList Get list of urls, added by user.
 func (h *Handler) GetUserURLList() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()

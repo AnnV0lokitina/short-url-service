@@ -7,16 +7,19 @@ import (
 	"time"
 )
 
+// App stores the handler.
 type App struct {
 	h http.Handler
 }
 
+// NewApp create new App.
 func NewApp(handler http.Handler) *App {
 	return &App{
 		h: handler,
 	}
 }
 
+// Run Start the application.
 func (app *App) Run(ctx context.Context, serverAddress string) error {
 	httpShutdownCh := make(chan struct{})
 	server := &http.Server{Addr: serverAddress, Handler: app.h}

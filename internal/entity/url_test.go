@@ -3,8 +3,9 @@ package entity
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (

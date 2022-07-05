@@ -2,19 +2,25 @@ package main
 
 import (
 	"context"
-	handlerPkg "github.com/AnnV0lokitina/short-url-service.git/internal/handler"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/repo"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/service"
-	"github.com/AnnV0lokitina/short-url-service.git/internal/sqlrepo"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	handlerPkg "github.com/AnnV0lokitina/short-url-service/internal/handler"
+	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
+	"github.com/AnnV0lokitina/short-url-service/internal/service"
+	"github.com/AnnV0lokitina/short-url-service/internal/sqlrepo"
+	_ "net/http/pprof"
 )
 
 const nOfWorkers = 3
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 	cfg := initConfig()
 	initParams(cfg)
 
@@ -55,11 +61,11 @@ func initRepo(ctx context.Context, cfg *config) (service.Repo, error) {
 		return repository, nil
 	}
 	if cfg.FileStoragePath != "" {
-		repository, err := repo.NewFileRepo(cfg.FileStoragePath)
+		repository, err := repoPkg.NewFileRepo(cfg.FileStoragePath)
 		if err != nil {
 			return nil, err
 		}
 		return repository, nil
 	}
-	return repo.NewMemoryRepo(), nil
+	return repoPkg.NewMemoryRepo(), nil
 }

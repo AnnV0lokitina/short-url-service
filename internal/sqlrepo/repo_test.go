@@ -2,11 +2,12 @@ package sqlrepo
 
 import (
 	"context"
+	"testing"
+	"time"
+
 	"github.com/pashagolub/pgxmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 func TestRepo_PingBD(t *testing.T) {

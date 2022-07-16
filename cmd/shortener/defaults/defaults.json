@@ -3,5 +3,6 @@
   "base_url": "https://myhost.io:8081",
   "file_storage_path": "defaults/storage.json",
   "database_dsn": "",
-  "enable_https": true
+  "enable_https": true,
+  "trusted_subnet": "255.255.255"
 }

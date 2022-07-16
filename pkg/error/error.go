@@ -14,9 +14,10 @@ type LabelError struct {
 
 // Possible error descriptions.
 const (
-	TypeConflict = "CONFLICT"  // error type conflict
-	TypeNotFound = "NOT FOUND" // error type not found
-	TypeGone     = "GONE"      // error type gone
+	TypeConflict  = "CONFLICT"  // error type conflict
+	TypeNotFound  = "NOT FOUND" // error type not found
+	TypeGone      = "GONE"      // error type gone
+	TypeForbidden = "FORBIDDEN" // error type forbidden
 )
 
 // Error Return error as string.

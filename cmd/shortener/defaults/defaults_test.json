@@ -3,5 +3,6 @@
   "base_url": "test",
   "file_storage_path": "test",
   "database_dsn": "test",
-  "enable_https": false
+  "enable_https": false,
+  "trusted_subnet": "test"
 }

@@ -3,10 +3,9 @@ package repo
 import (
 	"context"
 	"errors"
-	"sort"
-
 	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 	labelError "github.com/AnnV0lokitina/short-url-service/pkg/error"
+	"sort"
 )
 
 // PingBD Show that database is available.
@@ -131,4 +130,16 @@ func (r *Repo) CheckUserBatch(_ context.Context, userID uint32, listShortURL []s
 		}
 	}
 	return resultList, nil
+}
+
+func (r *Repo) GetStats(ctx context.Context) (urls int, users int, err error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	urls = len(r.rows)
+	userMap := make(map[uint32]bool)
+	for _, row := range r.rows {
+		userMap[row.UserID] = true
+	}
+	users = len(userMap)
+	return urls, users, nil
 }

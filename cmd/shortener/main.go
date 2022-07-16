@@ -54,7 +54,7 @@ func main() {
 }
 
 func createApp(cfg *config, repo servicePkg.Repo) (*App, *servicePkg.Service) {
-	service := servicePkg.NewService(cfg.BaseURL, repo)
+	service := servicePkg.NewService(cfg.BaseURL, repo, cfg.TrustedSubnet)
 	handler := handlerPkg.NewHandler(service)
 	return NewApp(handler), service
 }

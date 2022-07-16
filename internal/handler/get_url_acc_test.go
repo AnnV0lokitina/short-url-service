@@ -14,7 +14,7 @@ import (
 
 func ExampleHandler_GetURL() {
 	repo := repoPkg.NewMemoryRepo()
-	service := service.NewService("http://localhost:8080", repo)
+	service := service.NewService("http://localhost:8080", repo, "")
 
 	h := &Handler{
 		Mux:     chi.NewMux(),
@@ -42,7 +42,7 @@ func ExampleHandler_GetURL() {
 
 func ExampleHandler_GetUserURLList() {
 	repo := repoPkg.NewMemoryRepo()
-	service := service.NewService("http://localhost:8080", repo)
+	service := service.NewService("http://localhost:8080", repo, "")
 
 	h := &Handler{
 		Mux:     chi.NewMux(),

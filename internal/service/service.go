@@ -20,14 +20,16 @@ type Repo interface {
 	AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error
 	DeleteBatch(ctx context.Context, userID uint32, listShortURL []string) error
 	CheckUserBatch(ctx context.Context, userID uint32, listShortURL []string) ([]string, error)
+	GetStats(ctx context.Context) (urls int, users int, err error)
 }
 
 // Service keep information to execute application tasks.
 type Service struct {
-	mu          sync.Mutex
-	baseURL     string
-	repo        Repo
-	jobChDelete chan *JobDelete
+	mu            sync.Mutex
+	baseURL       string
+	repo          Repo
+	jobChDelete   chan *JobDelete
+	trustedSubnet string
 }
 
 // JobDelete keep user and urls list to delete
@@ -37,10 +39,11 @@ type JobDelete struct {
 }
 
 // NewService Create new Service struct.
-func NewService(baseURL string, repo Repo) *Service {
+func NewService(baseURL string, repo Repo, trustedSubnet string) *Service {
 	return &Service{
-		baseURL: baseURL,
-		repo:    repo,
+		baseURL:       baseURL,
+		repo:          repo,
+		trustedSubnet: trustedSubnet,
 	}
 }
 

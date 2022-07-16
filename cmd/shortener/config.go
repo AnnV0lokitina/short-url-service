@@ -18,6 +18,7 @@ type config struct {
 	DataBaseDSN     string `env:"DATABASE_DSN" envDefault:"" json:"database_dsn,omitempty"`
 	EnableHTTPS     bool   `env:"ENABLE_HTTPS" json:"enable_https,omitempty"`
 	Config          string `env:"CONFIG" envDefault:"" json:"-"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET" envDefault:"" json:"trusted_subnet,omitempty"`
 }
 
 type paramsConfig struct {
@@ -27,6 +28,7 @@ type paramsConfig struct {
 	DataBaseDSN     *string
 	EnableHTTPS     *bool
 	Config          *string
+	TrustedSubnet   *string
 }
 
 func InitParams() *paramsConfig {
@@ -60,6 +62,10 @@ func InitParams() *paramsConfig {
 		cfg.Config = &flagValue
 		return nil
 	})
+	flag.Func("t", "trusted subnet", func(flagValue string) error {
+		cfg.TrustedSubnet = &flagValue
+		return nil
+	})
 	flag.Parse()
 	return &cfg
 }
@@ -89,6 +95,9 @@ func initParamsWithConfig(params *paramsConfig) *config {
 	}
 	if params.Config != nil {
 		cfg.Config = *params.Config
+	}
+	if params.TrustedSubnet != nil {
+		cfg.TrustedSubnet = *params.TrustedSubnet
 	}
 	return &cfg
 }
@@ -132,6 +141,9 @@ func setEnvFromJSON(path string) error {
 	}
 	if _, hasEnv := os.LookupEnv("ENABLE_HTTPS"); !hasEnv {
 		err = os.Setenv("ENABLE_HTTPS", strconv.FormatBool(config.EnableHTTPS))
+	}
+	if _, hasEnv := os.LookupEnv("TRUSTED_SUBNET"); !hasEnv {
+		err = os.Setenv("TRUSTED_SUBNET", strconv.FormatBool(config.EnableHTTPS))
 	}
 	return err
 }

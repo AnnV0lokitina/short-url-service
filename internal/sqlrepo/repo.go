@@ -255,3 +255,14 @@ func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, listShortURL [
 	br.Close()
 	return shortURLs, nil
 }
+
+func (r *Repo) GetStats(ctx context.Context) (urls int, users int, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+	sql := "SELECT count(distinct user_id), count(original_url) FROM urls"
+	err = r.conn.QueryRow(ctx, sql).Scan(&users, &urls)
+	if err != nil {
+		return 0, 0, err
+	}
+	return urls, users, nil
+}

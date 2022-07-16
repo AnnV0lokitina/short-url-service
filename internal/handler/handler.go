@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"github.com/AnnV0lokitina/short-url-service/internal/entity"
 	"github.com/AnnV0lokitina/short-url-service/internal/service"
 	"github.com/go-chi/chi/v5"
 	"net/http"
@@ -20,6 +21,7 @@ type Service interface {
 	GetRepo() service.Repo
 	GetBaseURL() string
 	SetBaseURL(baseURL string)
+	GetStats(ctx context.Context, ipStr string) (entity.Stats, error)
 }
 
 // Handler structure holds dependencies for server handlers.
@@ -44,6 +46,7 @@ func NewHandler(service Service) *Handler {
 	h.Get("/ping", h.PingDB())
 	h.Post("/api/shorten/batch", h.ShortenBatch())
 	h.Delete("/api/user/urls", h.DeleteBatch())
+	h.Get("/api/internal/stats", h.GetStats())
 
 	h.MethodNotAllowed(h.ExecIfNotAllowed())
 

@@ -1,0 +1,7 @@
+{
+  "server_address": "myhost.io:8081",
+  "base_url": "https://myhost.io:8081",
+  "file_storage_path": "defaults/storage.json",
+  "database_dsn": "",
+  "enable_https": true
+}

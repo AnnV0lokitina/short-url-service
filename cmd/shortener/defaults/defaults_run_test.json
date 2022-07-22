@@ -1,0 +1,7 @@
+{
+  "server_address": "localhost:8080",
+  "base_url": "http://localhost:8080",
+  "file_storage_path": "defaults/storage_test.json",
+  "database_dsn": "postgres://postgres:qaz@localhost:5432/mydb",
+  "enable_https": false
+}

@@ -22,6 +22,11 @@ type MockedRepo struct {
 	mock.Mock
 }
 
+const (
+	RightUser = uint32(1)
+	WrongUser = uint32(2)
+)
+
 func (r *MockedRepo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error {
 	if TmpURLError {
 		return errors.New("error")
@@ -74,5 +79,8 @@ func (r *MockedRepo) DeleteBatch(_ context.Context, userID uint32, list []string
 }
 
 func (r *MockedRepo) CheckUserBatch(ctx context.Context, userID uint32, list []string) ([]string, error) {
-	return nil, nil
+	if userID == WrongUser {
+		return nil, errors.New("error")
+	}
+	return list, nil
 }

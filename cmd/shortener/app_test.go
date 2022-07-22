@@ -38,13 +38,14 @@ func TestNewApp(t *testing.T) {
 	app := NewApp(handler, nil)
 	assert.IsType(t, &App{}, app)
 
-	ctx, _ := context.WithTimeout(context.TODO(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.TODO(), 2*time.Second)
 	shutdownCh := make(chan error)
 	go func() {
 		sendErr := app.Run(ctx, cfg.ServerAddress, false)
 		shutdownCh <- sendErr
 	}()
 	gotErr := <-shutdownCh
+	cancel()
 	assert.Nil(t, gotErr)
 }
 

@@ -6,6 +6,7 @@ option go_package = "github.com/AnnV0lokitina/short-url-service/proto";
 
 // SetURLRequest schema to set 1 url
 message SetAddrRequest {
+  fixed32 user = 5;
   string original_addr = 2;
 }
 
@@ -17,7 +18,6 @@ message SetAddrResponse {
 
 // GetURLRequest schema to get 1 full url
 message GetAddrRequest {
-  fixed32 user = 5;
   string checksum = 6;
 }
 

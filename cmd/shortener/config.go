@@ -105,7 +105,6 @@ func InitConfig(params *paramsConfig) *config {
 	cfgNoFile := initParamsWithConfig(params)
 	if cfgNoFile.Config == "" {
 		return cfgNoFile
-		//cfgNoFile.Config = "defaults/defaults_run_test.json"
 	}
 	err := setEnvFromJSON(cfgNoFile.Config)
 	if err != nil {

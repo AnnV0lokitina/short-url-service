@@ -28,8 +28,6 @@ func main() {
 	log.Printf("Build version: %s\nBuild date: %s\nBuild commit: %s\n", buildVersion, buildDate, buildCommit)
 	params := InitParams()
 	cfg := InitConfig(params)
-	log.Println(cfg)
-
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
 		c := make(chan os.Signal, 1)

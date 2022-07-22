@@ -62,11 +62,15 @@ func (s *Service) GetRepo() Repo {
 	return s.repo
 }
 
-// CreateDeleteWorkerPull Initialize pull of workers to delete urls list.
-func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
+func (s *Service) initChan() {
 	s.mu.Lock()
 	s.jobChDelete = make(chan *JobDelete)
 	s.mu.Unlock()
+}
+
+// CreateDeleteWorkerPull Initialize pull of workers to delete urls list.
+func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
+	s.initChan()
 	g, _ := errgroup.WithContext(ctx)
 
 	for i := 1; i <= nOfWorkers; i++ {
@@ -81,17 +85,28 @@ func (s *Service) CreateDeleteWorkerPull(ctx context.Context, nOfWorkers int) {
 			return nil
 		})
 	}
-
 	go func() {
 		<-ctx.Done()
+
 		s.mu.Lock()
 		close(s.jobChDelete)
 		s.mu.Unlock()
 	}()
-
 	if err := g.Wait(); err != nil {
 		log.Println(err)
 	}
+}
+
+func (s *Service) sendJob(userID uint32, list []string) {
+	job := &JobDelete{
+		UserID: userID,
+		URLs:   list,
+	}
+	s.mu.Lock()
+	if s.jobChDelete != nil {
+		s.jobChDelete <- job
+	}
+	s.mu.Unlock()
 }
 
 // DeleteURLList Delete urls list, sent by user.
@@ -109,14 +124,6 @@ func (s *Service) DeleteURLList(ctx context.Context, userID uint32, checksums []
 	if len(list) <= 0 {
 		return nil
 	}
-	job := &JobDelete{
-		UserID: userID,
-		URLs:   list,
-	}
-	s.mu.Lock()
-	if s.jobChDelete != nil {
-		s.jobChDelete <- job
-	}
-	s.mu.Unlock()
+	s.sendJob(userID, list)
 	return nil
 }

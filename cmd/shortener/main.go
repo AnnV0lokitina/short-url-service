@@ -3,11 +3,13 @@ package main
 
 import (
 	"context"
+	"google.golang.org/grpc"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	handlerGRPCPkg "github.com/AnnV0lokitina/short-url-service/internal/grpc"
 	handlerPkg "github.com/AnnV0lokitina/short-url-service/internal/handler"
 	repoPkg "github.com/AnnV0lokitina/short-url-service/internal/repo"
 	servicePkg "github.com/AnnV0lokitina/short-url-service/internal/service"
@@ -56,7 +58,11 @@ func main() {
 func createApp(cfg *config, repo servicePkg.Repo) (*App, *servicePkg.Service) {
 	service := servicePkg.NewService(cfg.BaseURL, repo, cfg.TrustedSubnet)
 	handler := handlerPkg.NewHandler(service)
-	return NewApp(handler), service
+	grpcService := &GRPCService{
+		Handler: handlerGRPCPkg.NewHandler(service),
+		Server:  grpc.NewServer(),
+	}
+	return NewApp(handler, grpcService), service
 }
 
 func initRepo(ctx context.Context, cfg *config) (servicePkg.Repo, error) {

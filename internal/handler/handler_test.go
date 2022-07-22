@@ -25,6 +25,9 @@ func testRequest(t *testing.T, request testRequestStruct) *http.Response {
 	if request.acceptEncoding != nil {
 		req.Header.Set(headerAcceptEncoding, *request.acceptEncoding)
 	}
+	if request.xRealIP != "" {
+		req.Header.Set(headerIP, request.xRealIP)
+	}
 	if request.cookie != nil {
 		req.AddCookie(request.cookie)
 	}
@@ -54,7 +57,7 @@ func getResponseReader(t *testing.T, resp *http.Response) io.Reader {
 }
 
 func TestHandler_ServeHTTP(t *testing.T) {
-	service := new(servicePkg.MockedService)
+	service := servicePkg.NewMockedService()
 	handler := NewHandler(service)
 	ts := httptest.NewServer(handler)
 	handler.service.SetBaseURL(ts.URL)

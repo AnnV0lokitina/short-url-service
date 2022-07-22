@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/AnnV0lokitina/short-url-service/proto";
+
+// SetURLRequest schema to set 1 url
+message SetAddrRequest {
+  string original_addr = 2;
+}
+
+// SetURLResponse schema to return 1 url
+message SetAddrResponse {
+  fixed32 user = 3;
+  string result = 4;
+}
+
+// GetURLRequest schema to get 1 full url
+message GetAddrRequest {
+  fixed32 user = 5;
+  string checksum = 6;
+}
+
+// GetURLResponse schema to return 1 full url
+message GetAddrResponse {
+  string original_addr = 7;
+}
+
+// URLListItemRequest schema to get an item of urls list
+message AddrListItemRequest {
+  string correlation_id = 8;
+  string original_addr = 9;
+}
+
+// URLListItemRequest
+message AddrListRequest {
+  fixed32 user = 10;
+  repeated AddrListItemRequest list = 11;
+}
+
+// URLListItemResponse schema to return a list of urls
+message AddrListItemResponse {
+  string correlation_id = 12;
+  string short_addr = 13;
+}
+
+message AddrListResponse {
+  fixed32 user = 14;
+  repeated AddrListItemResponse list = 15;
+}
+
+message AddrFullInfoListItemResponse {
+  string short_addr = 16;
+  string original_addr = 17;
+}
+
+message AddrFullInfoListResponse {
+  repeated AddrFullInfoListItemResponse list = 18;
+}
+
+message UserInfo {
+  fixed32 user = 19;
+}
+
+message DeleteBatchRequest {
+  fixed32 user = 20;
+  repeated string checksum_list = 21;
+}
+
+message TextResponse {
+  string result = 22;
+}
+
+message StatRequest {
+}
+
+message StatsResponse {
+  fixed32 n_addr = 24;
+  fixed32 n_users = 25;
+}
+
+service URLs {
+  rpc SetURL (SetAddrRequest) returns (SetAddrResponse);
+  rpc GetURL (GetAddrRequest) returns (GetAddrResponse);
+  rpc GetUserURLList (UserInfo) returns (AddrFullInfoListResponse);
+  rpc SetShortenBatch (AddrListRequest) returns (AddrListResponse);
+  rpc DeleteBatch (DeleteBatchRequest) returns (TextResponse);
+  rpc GetStats (StatRequest) returns (StatsResponse);
+}

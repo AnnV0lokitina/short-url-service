@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"errors"
+	"github.com/AnnV0lokitina/short-url-service/internal/repo/file"
 	"os"
 	"testing"
 	"time"
@@ -382,4 +383,71 @@ func TestClose(t *testing.T) {
 	}
 	err := repo.Close(context.TODO())
 	assert.Nil(t, err)
+
+	tmpDir := os.TempDir()
+	testDir, err := os.MkdirTemp(tmpDir, "test")
+	require.NoError(t, err)
+	filePath := testDir + testReaderFileName
+	writer, err := file.NewWriter(filePath)
+	assert.Nil(t, err)
+	repo = &Repo{
+		rows:   make(map[string]*entity.Record),
+		writer: writer,
+	}
+	err = repo.Close(context.TODO())
+	assert.Nil(t, err)
+}
+
+func TestGetStats(t *testing.T) {
+	repo := &Repo{
+		rows: make(map[string]*entity.Record),
+	}
+	r1 := &entity.Record{
+		UserID:      1,
+		Deleted:     false,
+		ShortURL:    "short_url1",
+		OriginalURL: "original_url1",
+	}
+	r2 := &entity.Record{
+		UserID:      2,
+		Deleted:     false,
+		ShortURL:    "short_url2",
+		OriginalURL: "original_url2",
+	}
+	repo.rows["1"] = r1
+	repo.rows["2"] = r2
+	urls, users, err := repo.GetStats(context.TODO())
+	assert.Nil(t, err)
+	assert.Equal(t, 2, urls)
+	assert.Equal(t, 2, users)
+}
+
+func TestAddBatch(t *testing.T) {
+	repo := &Repo{
+		rows: make(map[string]*entity.Record),
+	}
+	list := []*entity.BatchURLItem{
+		{
+			CorrelationID: "1",
+			URL: &entity.URL{
+				Short:    "short1",
+				Original: "original1",
+			},
+		},
+		{
+			CorrelationID: "2",
+			URL: &entity.URL{
+				Short:    "short2",
+				Original: "original2",
+			},
+		},
+	}
+	err := repo.AddBatch(context.TODO(), 1, list)
+	assert.Nil(t, err)
+	r1, ok := repo.rows["short1"]
+	assert.True(t, ok)
+	assert.Equal(t, "original1", r1.OriginalURL)
+	r2, ok := repo.rows["short2"]
+	assert.True(t, ok)
+	assert.Equal(t, "original2", r2.OriginalURL)
 }

@@ -11,10 +11,10 @@ import (
 )
 
 var (
-	tmpURL      *entity.URL
+	TmpURL      *entity.URL
 	TmpURLError = false
-	tmpURLList  []*entity.URL
-	tmpUserID   uint32
+	TmpURLList  []*entity.URL
+	TmpUserID   uint32
 	PingDB      bool
 )
 
@@ -23,37 +23,47 @@ type MockedRepo struct {
 }
 
 const (
-	RightUser = uint32(1)
-	WrongUser = uint32(2)
+	RightUser     = uint32(1)
+	WrongUser     = uint32(2)
+	UserWithError = uint32(3)
 )
 
 func (r *MockedRepo) SetURL(ctx context.Context, userID uint32, url *entity.URL) error {
 	if TmpURLError {
 		return errors.New("error")
 	}
-	tmpURL = url
-	tmpURLList = []*entity.URL{tmpURL}
-	tmpUserID = userID
+	TmpURL = url
+	TmpURLList = []*entity.URL{TmpURL}
+	TmpUserID = userID
 	if url.Original == "conflict" {
 		return labelError.NewLabelError(labelError.TypeConflict, errors.New("URL exists"))
+	}
+	if url.Original == "internal error" {
+		return errors.New("error")
 	}
 	return nil
 }
 
 func (r *MockedRepo) GetURL(ctx context.Context, shortURL string) (*entity.URL, error) {
-	if shortURL == tmpURL.Short {
-		return tmpURL, nil
+	if shortURL == TmpURL.Short {
+		return TmpURL, nil
+	}
+	if shortURL == "URL deleted" {
+		return nil, labelError.NewLabelError(labelError.TypeGone, errors.New("URL deleted"))
+	}
+	if shortURL == "Invalid request" {
+		return nil, errors.New("Invalid request")
 	}
 	return nil, errors.New("no url saved")
 }
 
 func (r *MockedRepo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, error) {
-	if tmpUserID == id {
-		return tmpURLList, nil
+	if TmpUserID == id {
+		return TmpURLList, nil
 	}
 	if id == 1234 {
 		return []*entity.URL{
-			&entity.URL{
+			{
 				Short:    "short",
 				Original: "original",
 			},
@@ -71,10 +81,16 @@ func (r *MockedRepo) PingBD(ctx context.Context) bool {
 }
 
 func (r *MockedRepo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
+	if userID == UserWithError {
+		return errors.New("error")
+	}
 	return nil
 }
 
 func (r *MockedRepo) DeleteBatch(_ context.Context, userID uint32, list []string) error {
+	if userID == WrongUser {
+		return errors.New("error")
+	}
 	return nil
 }
 
@@ -83,4 +99,8 @@ func (r *MockedRepo) CheckUserBatch(ctx context.Context, userID uint32, list []s
 		return nil, errors.New("error")
 	}
 	return list, nil
+}
+
+func (r *MockedRepo) GetStats(_ context.Context) (urls int, users int, err error) {
+	return 1, 1, nil
 }

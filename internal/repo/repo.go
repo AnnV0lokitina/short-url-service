@@ -85,7 +85,7 @@ func (r *Repo) GetUserURLList(_ context.Context, id uint32) ([]*entity.URL, erro
 }
 
 // AddBatch Save to storage list of urls.
-func (r *Repo) AddBatch(ctx context.Context, userID uint32, list []*entity.BatchURLItem) error {
+func (r *Repo) AddBatch(_ context.Context, userID uint32, list []*entity.BatchURLItem) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	for _, item := range list {
@@ -132,7 +132,7 @@ func (r *Repo) CheckUserBatch(_ context.Context, userID uint32, listShortURL []s
 	return resultList, nil
 }
 
-func (r *Repo) GetStats(ctx context.Context) (urls int, users int, err error) {
+func (r *Repo) GetStats(_ context.Context) (urls int, users int, err error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	urls = len(r.rows)

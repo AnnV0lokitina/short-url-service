@@ -12,6 +12,7 @@ const (
 	headerAcceptEncoding  = "Accept-Encoding"
 	headerContentEncoding = "Content-Encoding"
 	headerContentType     = "Content-Type"
+	headerIP              = "X-Real-IP"
 	encoding              = "gzip"
 )
 

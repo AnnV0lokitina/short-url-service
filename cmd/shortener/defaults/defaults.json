@@ -2,7 +2,7 @@
   "server_address": "myhost.io:8081",
   "base_url": "https://myhost.io:8081",
   "file_storage_path": "defaults/storage.json",
-  "database_dsn": "",
+  "database_dsn": "postgres://postgres:qaz@localhost:5432/mydb",
   "enable_https": true,
-  "trusted_subnet": "255.255.255"
+  "trusted_subnet": "101.101.101"
 }

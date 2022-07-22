@@ -12,7 +12,7 @@ import (
 func (h *Handler) GetStats() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.Background()
-		ipStr := r.Header.Get("X-Real-IP")
+		ipStr := r.Header.Get(headerIP)
 		stats, err := h.service.GetStats(ctx, ipStr)
 		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 		if err != nil {

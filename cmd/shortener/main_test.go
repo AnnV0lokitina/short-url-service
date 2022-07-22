@@ -50,5 +50,5 @@ func TestCreateApp(t *testing.T) {
 
 	app, service := createApp(cfg, repo)
 	assert.IsType(t, app, &App{})
-	assert.IsType(t, service, servicePkg.NewService("", repo))
+	assert.IsType(t, service, servicePkg.NewService("", repo, ""))
 }

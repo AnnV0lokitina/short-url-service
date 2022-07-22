@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"github.com/caarlos0/env/v6"
 	"io/ioutil"
@@ -106,6 +105,7 @@ func InitConfig(params *paramsConfig) *config {
 	cfgNoFile := initParamsWithConfig(params)
 	if cfgNoFile.Config == "" {
 		return cfgNoFile
+		//cfgNoFile.Config = "defaults/defaults_run_test.json"
 	}
 	err := setEnvFromJSON(cfgNoFile.Config)
 	if err != nil {
@@ -116,9 +116,6 @@ func InitConfig(params *paramsConfig) *config {
 }
 
 func setEnvFromJSON(path string) error {
-	if path == "" {
-		return errors.New("no json env file")
-	}
 	fContent, err := ioutil.ReadFile(path)
 	if err != nil {
 		return err
@@ -143,7 +140,7 @@ func setEnvFromJSON(path string) error {
 		err = os.Setenv("ENABLE_HTTPS", strconv.FormatBool(config.EnableHTTPS))
 	}
 	if _, hasEnv := os.LookupEnv("TRUSTED_SUBNET"); !hasEnv {
-		err = os.Setenv("TRUSTED_SUBNET", strconv.FormatBool(config.EnableHTTPS))
+		err = os.Setenv("TRUSTED_SUBNET", config.TrustedSubnet)
 	}
 	return err
 }

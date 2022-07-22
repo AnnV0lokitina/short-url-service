@@ -20,6 +20,7 @@ type testRequestStruct struct {
 	acceptEncoding *string
 	cookie         *http.Cookie
 	dbEnabled      *bool
+	xRealIP        string
 }
 
 type testResultStruct struct {
@@ -383,6 +384,37 @@ func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 			},
 		},
 		{
+			name:        "test json-api create url batch err",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodPost,
+				target: ts.URL + "/api/shorten/batch",
+				body:   strings.NewReader(""),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "test json-api create url batch err",
+			setURLError: false,
+			request: testRequestStruct{
+				method: http.MethodPost,
+				target: ts.URL + "/api/shorten/batch",
+				body: strings.NewReader("[{\"correlation_id\":\"string id\",\"original_url\":\"original url\"}," +
+					"{\"correlation_id\":\"string id1\",\"original_url\":\"original url1\"]"),
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
 			name:        "test json-api create url batch positive",
 			setURLError: false,
 			request: testRequestStruct{
@@ -428,6 +460,36 @@ func getTestsDataList(t *testing.T, ts *httptest.Server) []testStruct {
 				body:           "",
 				headerLocation: "",
 				code:           http.StatusBadRequest,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "stats success",
+			setURLError: false,
+			request: testRequestStruct{
+				method:  http.MethodGet,
+				target:  ts.URL + "/api/internal/stats",
+				xRealIP: "101.101.101.111",
+			},
+			result: testResultStruct{
+				body:           "{\"urls\":1,\"users\":1}\n",
+				headerLocation: "",
+				code:           http.StatusOK,
+				contentType:    "",
+			},
+		},
+		{
+			name:        "stats forbidden",
+			setURLError: false,
+			request: testRequestStruct{
+				method:  http.MethodGet,
+				target:  ts.URL + "/api/internal/stats",
+				xRealIP: "",
+			},
+			result: testResultStruct{
+				body:           "",
+				headerLocation: "",
+				code:           http.StatusForbidden,
 				contentType:    "",
 			},
 		},

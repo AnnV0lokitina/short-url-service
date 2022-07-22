@@ -13,7 +13,7 @@ import (
 
 func ExampleHandler_SetURL() {
 	repo := repoPkg.NewMemoryRepo()
-	service := service.NewService("http://localhost:8080", repo)
+	service := service.NewService("http://localhost:8080", repo, "")
 
 	h := &Handler{
 		Mux:     chi.NewMux(),
@@ -38,7 +38,7 @@ func ExampleHandler_SetURL() {
 
 func ExampleHandler_SetURLFromJSON() {
 	repo := repoPkg.NewMemoryRepo()
-	service := service.NewService("http://localhost:8080", repo)
+	service := service.NewService("http://localhost:8080", repo, "")
 
 	h := &Handler{
 		Mux:     chi.NewMux(),

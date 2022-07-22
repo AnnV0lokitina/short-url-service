@@ -28,42 +28,6 @@ type fileConfig struct {
 	EnableHTTPS     bool   `json:"enable_https"`
 }
 
-//func TestRepo_PingBD(t *testing.T) {
-//	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-//	defer cancel()
-//
-//	conn, err := pgxmock.NewConn()
-//	require.NoError(t, err)
-//	defer conn.Close(ctx)
-//
-//	type input struct {
-//		conn PgxIface
-//		ctx  context.Context
-//	}
-//	tests := []struct {
-//		name  string
-//		input input
-//		want  bool
-//	}{
-//		{
-//			name: "ping positive",
-//			input: input{
-//				ctx:  ctx,
-//				conn: conn,
-//			},
-//			want: true,
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			r := &Repo{
-//				conn: tt.input.conn,
-//			}
-//			assert.Equalf(t, tt.want, r.PingBD(tt.input.ctx), "PingBD(%v)", tt.input.ctx)
-//		})
-//	}
-//}
-
 func clearDB(ctx context.Context, t *testing.T, repo *Repo) {
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
@@ -110,26 +74,32 @@ func TestRepo(t *testing.T) {
 	url := entity.NewURL("url", shortURLHost)
 	list := generateBatch()
 
+	// check that url list empty
 	_, err = repo.GetUserURLList(ctx, rightUser)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeNotFound, labelErr.Label)
 
+	// check that no url
 	_, err = repo.GetURL(ctx, url.Short)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeNotFound, labelErr.Label)
 
+	// check set url success
 	err = repo.SetURL(ctx, rightUser, url)
 	assert.Nil(t, err)
 
+	// check add batch success
 	err = repo.AddBatch(ctx, rightUser, list)
 	assert.Nil(t, err)
 
+	// check get one url success
 	readURL, err := repo.GetURL(ctx, url.Short)
 	assert.Nil(t, err)
 	assert.Equal(t, url, readURL)
 
+	// check get url list success
 	readURLList, err := repo.GetUserURLList(ctx, rightUser)
 	assert.Nil(t, err)
 	assert.Equal(t, len(list)+1, len(readURLList))
@@ -137,30 +107,44 @@ func TestRepo(t *testing.T) {
 		assert.IsType(t, &entity.URL{}, item)
 	}
 
+	// check wrong user url list is empry
 	_, err = repo.GetUserURLList(ctx, wrongUser)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeNotFound, labelErr.Label)
 
+	// check set user conflict
 	err = repo.SetURL(ctx, rightUser, url)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeConflict, labelErr.Label)
+
+	// check get stats
+	nURLs, nUsers, err := repo.GetStats(ctx)
+	assert.Nil(t, err)
+	assert.Equal(t, 5, nURLs)
+	assert.Equal(t, 1, nUsers)
 
 	var shortURLList []string
 	for _, item := range list {
 		shortURLList = append(shortURLList, item.URL.Short)
 	}
 	shortURLList = append(shortURLList, "wrong short url")
+
+	// check user url batch exists
 	readShortURLList, err := repo.CheckUserBatch(ctx, rightUser, shortURLList)
 	assert.Nil(t, err)
 	assert.Equal(t, len(list), len(readShortURLList))
 
+	// delete batch
 	err = repo.DeleteBatch(ctx, rightUser, readShortURLList)
 	assert.Nil(t, err)
 
+	// check that url gone
 	_, err = repo.GetURL(ctx, list[0].URL.Short)
 	assert.NotNil(t, err)
 	assert.True(t, errors.As(err, &labelErr))
 	assert.Equal(t, labelError.TypeGone, labelErr.Label)
+
+	clearDB(ctx, t, repo)
 }

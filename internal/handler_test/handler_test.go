@@ -14,7 +14,7 @@ import (
 
 func Example() {
 	repo := repoPkg.NewMemoryRepo()
-	service := service.NewService("http://localhost:8080", repo)
+	service := service.NewService("http://localhost:8080", repo, "")
 
 	h := handlerPkg.NewHandler(service)
 

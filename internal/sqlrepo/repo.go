@@ -32,14 +32,16 @@ type Repo struct {
 	//conn *pgx.Conn
 }
 
-// NewSQLRepo Create repository, connected to db.
-func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
+func createSQLConnection(ctx context.Context, dsn string) (PgxIface, error) {
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
-	conn, err := pgx.Connect(ctx, dsn)
-	if err != nil {
-		return nil, err
-	}
+	return pgx.Connect(ctx, dsn)
+}
+
+func createTable(ctx context.Context, conn PgxIface) error {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
 	sql := "create table IF NOT EXISTS urls (" +
 		"user_id bigint," +
 		"short_url text not null," +
@@ -48,6 +50,19 @@ func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
 		"unique (original_url)" +
 		")"
 	if _, err := conn.Exec(ctx, sql); err != nil {
+		return err
+	}
+	return nil
+}
+
+// NewSQLRepo Create repository, connected to db.
+func NewSQLRepo(ctx context.Context, dsn string) (*Repo, error) {
+	conn, err := createSQLConnection(ctx, dsn)
+	if err != nil {
+		return nil, err
+	}
+	err = createTable(ctx, conn)
+	if err != nil {
 		return nil, err
 	}
 	return &Repo{
@@ -254,4 +269,15 @@ func (r *Repo) CheckUserBatch(ctx context.Context, userID uint32, listShortURL [
 
 	br.Close()
 	return shortURLs, nil
+}
+
+func (r *Repo) GetStats(ctx context.Context) (urls int, users int, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+	sql := "SELECT count(distinct user_id), count(original_url) FROM urls"
+	err = r.conn.QueryRow(ctx, sql).Scan(&users, &urls)
+	if err != nil {
+		return 0, 0, err
+	}
+	return urls, users, nil
 }

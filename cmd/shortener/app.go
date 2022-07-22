@@ -3,7 +3,9 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	pb "github.com/AnnV0lokitina/short-url-service/proto"
 	"log"
+	"net"
 	"net/http"
 	"path/filepath"
 	"time"
@@ -14,25 +16,35 @@ import (
 // App stores the handler.
 type App struct {
 	h http.Handler
+	g *GRPCService
 }
 
 // NewApp create new App.
-func NewApp(handler http.Handler) *App {
+func NewApp(handler http.Handler, grpcService *GRPCService) *App {
 	return &App{
 		h: handler,
+		g: grpcService,
 	}
+}
+
+func createCertificate(dirCache string, hello *tls.ClientHelloInfo) (tls.Certificate, error) {
+	keyFile := filepath.Join(dirCache, hello.ServerName+".key")
+	crtFile := filepath.Join(dirCache, hello.ServerName+".crt")
+	return tls.LoadX509KeyPair(crtFile, keyFile)
+}
+
+func createCacheDir(certManager *autocert.Manager) string {
+	dirCache, ok := certManager.Cache.(autocert.DirCache)
+	if ok {
+		return string(dirCache)
+	}
+	return "certs"
 }
 
 func getSelfSignedOrLetsEncryptCert(certManager *autocert.Manager) func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
 	return func(hello *tls.ClientHelloInfo) (*tls.Certificate, error) {
-		dirCache, ok := certManager.Cache.(autocert.DirCache)
-		if !ok {
-			dirCache = "certs"
-		}
-
-		keyFile := filepath.Join(string(dirCache), hello.ServerName+".key")
-		crtFile := filepath.Join(string(dirCache), hello.ServerName+".crt")
-		certificate, err := tls.LoadX509KeyPair(crtFile, keyFile)
+		dirCache := createCacheDir(certManager)
+		certificate, err := createCertificate(dirCache, hello)
 		if err != nil {
 			log.Printf("%s\nFalling back to Letsencrypt\n", err)
 			return certManager.GetCertificate(hello)
@@ -42,13 +54,8 @@ func getSelfSignedOrLetsEncryptCert(certManager *autocert.Manager) func(hello *t
 	}
 }
 
-// Run Start the application.
-func (app *App) Run(ctx context.Context, serverAddress string, enableHTTPS bool) error {
-	var err error
+func createServer(h http.Handler, serverAddress string, enableHTTPS bool) *http.Server {
 	var server *http.Server
-
-	httpShutdownCh := make(chan struct{})
-
 	if enableHTTPS {
 		log.Println("https settings")
 		manager := &autocert.Manager{
@@ -61,22 +68,53 @@ func (app *App) Run(ctx context.Context, serverAddress string, enableHTTPS bool)
 		tlsConfig.GetCertificate = getSelfSignedOrLetsEncryptCert(manager)
 		server = &http.Server{
 			Addr:      ":8081",
-			Handler:   app.h,
+			Handler:   h,
 			TLSConfig: tlsConfig,
 		}
 	} else {
 		log.Println("http settings " + serverAddress)
-		server = &http.Server{Addr: serverAddress, Handler: app.h}
+		server = &http.Server{Addr: serverAddress, Handler: h}
+	}
+	return server
+}
+
+// Run Start the application.
+func (app *App) Run(ctx context.Context, serverAddress string, enableHTTPS bool) error {
+	var err error
+
+	httpShutdownCh := make(chan struct{})
+	server := createServer(app.h, serverAddress, enableHTTPS)
+
+	if app.g != nil {
+		go func() {
+			listen, err := net.Listen("tcp", ":3200")
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			pb.RegisterURLsServer(app.g.Server, app.g.Handler)
+			log.Println("gRPC server starts")
+			if err := app.g.Server.Serve(listen); err != nil {
+				log.Fatal(err)
+			}
+		}()
 	}
 
 	go func() {
 		<-ctx.Done()
 
+		if app.g != nil {
+			go func() {
+				app.g.Server.GracefulStop()
+				log.Println("stop grpc")
+			}()
+		}
+
 		graceCtx, graceCancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer graceCancel()
 
-		if err = server.Shutdown(graceCtx); err != nil {
-			log.Println(err)
+		if shutdownErr := server.Shutdown(graceCtx); shutdownErr != nil {
+			log.Println(shutdownErr)
 		}
 		httpShutdownCh <- struct{}{}
 	}()
@@ -90,6 +128,7 @@ func (app *App) Run(ctx context.Context, serverAddress string, enableHTTPS bool)
 	}
 
 	<-httpShutdownCh
+
 	if err == http.ErrServerClosed {
 		return nil
 	}

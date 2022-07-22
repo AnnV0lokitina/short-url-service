@@ -2,16 +2,16 @@ package handler
 
 import (
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
 	"net/http"
+
+	"github.com/AnnV0lokitina/short-url-service/pkg/userid"
 )
 
 var (
 	secretKey  = []byte("secret key")
-	idLength   = 4
 	cookieName = "login"
 )
 
@@ -29,7 +29,7 @@ func getUserIDFromRequest(r *http.Request) (userID uint32, err error) {
 	if err == nil {
 		return getIDFromLogin(login)
 	}
-	return generateUserID()
+	return userid.GenerateUserID()
 }
 
 func setUserIDCookie(w http.ResponseWriter, userID uint32) {
@@ -50,17 +50,8 @@ func setLoginToCookie(w http.ResponseWriter, login string) {
 	http.SetCookie(w, cookie)
 }
 
-func generateUserID() (uint32, error) {
-	b := make([]byte, idLength)
-	_, err := rand.Read(b)
-	if err != nil {
-		return 0, err
-	}
-	return binary.BigEndian.Uint32(b), nil
-}
-
 func idToByte(id uint32) []byte {
-	d := make([]byte, idLength)
+	d := make([]byte, userid.IDLength)
 	binary.BigEndian.PutUint32(d[0:], id)
 	return d
 }
@@ -84,11 +75,11 @@ func getIDFromLogin(encodedLogin string) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	id := binary.BigEndian.Uint32(data[:idLength])
+	id := binary.BigEndian.Uint32(data[:userid.IDLength])
 	h := hmac.New(sha256.New, secretKey)
-	h.Write(data[:idLength])
+	h.Write(data[:userid.IDLength])
 	sign := h.Sum(nil)
-	if hmac.Equal(sign, data[idLength:]) {
+	if hmac.Equal(sign, data[userid.IDLength:]) {
 		return id, nil
 	}
 	return 0, nil

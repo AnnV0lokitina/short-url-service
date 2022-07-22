@@ -13,7 +13,7 @@ import (
 
 func ExampleHandler_DeleteBatch() {
 	repo := repoPkg.NewMemoryRepo()
-	service := service.NewService("http://localhost:8080", repo)
+	service := service.NewService("http://localhost:8080", repo, "")
 
 	ctx := context.TODO()
 

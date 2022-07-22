@@ -52,7 +52,7 @@ func (r *MockedRepo) GetURL(ctx context.Context, shortURL string) (*entity.URL, 
 		return nil, labelError.NewLabelError(labelError.TypeGone, errors.New("URL deleted"))
 	}
 	if shortURL == "Invalid request" {
-		return nil, errors.New("Invalid request")
+		return nil, errors.New("invalid request")
 	}
 	return nil, errors.New("no url saved")
 }
